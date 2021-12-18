@@ -9,3 +9,7 @@ description = "Game based on Magic Maze"
 
 
 [dependencies]
+arrayvec = "0.7"
+env_logger = "0.9"
+log = "0.4"
+thiserror = "1"
