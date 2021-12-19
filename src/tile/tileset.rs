@@ -277,7 +277,7 @@ mod test {
     use TileCell::*;
     use WallState::*;
 
-    const TILE_SIMPLE1: &str = "
+    const TILE1_STR: &str = "
 +-+-+7+-+
 |  1   c|
 + +-+-+ +
@@ -288,6 +288,62 @@ mod test {
 |O|     |
 + +^+ + +
 ";
+    const TILE1: Tile = Tile {
+        cells: [
+            [Empty, Warp(Green), Empty, Camera(Available)],
+            [Empty, Empty, TimerFlip(Available), Empty],
+            [Empty, Empty, Empty, Empty],
+            [FinalExit(Orange), Empty, Empty, Empty],
+        ],
+        horz_walls: [
+            [Blocked, Blocked, Explore(Yellow), Blocked],
+            [Open, Blocked, Blocked, Open],
+            [Blocked, Open, Open, Blocked],
+            [Open, Blocked, Blocked, Open],
+            [Open, Entrance, Open, Open],
+        ],
+        vert_walls: [
+            [Blocked, Open, Open, Open, Blocked],
+            [Blocked, Open, Blocked, Open, Blocked],
+            [Blocked, Open, Blocked, Open, Blocked],
+            [Blocked, Blocked, Open, Open, Blocked],
+        ],
+        escalators: arrayvec::ArrayVec::new_const(),
+    };
+
+    const TILE2_STR: &str = "
++-+-+6+-+
+|t     4|
++-+ + +-+
+8      3|
++-+ + +-+
+|2    | 5
++-+ + +-+
+|1    |X|
++-+7+-+-+
+";
+    const TILE2: Tile = Tile {
+        cells: [
+            [TimerFlip(Available), Empty, Empty, Warp(Purple)],
+            [Empty, Empty, Empty, Warp(Yellow)],
+            [Warp(Orange), Empty, Empty, Empty],
+            [Warp(Green), Empty, Empty, Inaccessible],
+        ],
+        horz_walls: [
+            [Blocked, Blocked, Explore(Orange), Blocked],
+            [Blocked, Open, Open, Blocked],
+            [Blocked, Open, Open, Blocked],
+            [Blocked, Open, Open, Blocked],
+            [Blocked, Explore(Yellow), Blocked, Blocked],
+        ],
+        vert_walls: [
+            [Blocked, Open, Open, Open, Blocked],
+            [Explore(Purple), Open, Open, Open, Blocked],
+            [Blocked, Open, Open, Blocked, Explore(Green)],
+            [Blocked, Open, Open, Blocked, Blocked],
+        ],
+        escalators: arrayvec::ArrayVec::new_const(),
+    };
 
     const TILE_MISSING_NAME: &str = "
 +-+-+7+-+
@@ -304,42 +360,24 @@ mod test {
     #[test]
     fn tile_simple() {
         crate::init_logging();
-        let tile1 = Tile {
-            cells: [
-                [Empty, Warp(Green), Empty, Camera(Available)],
-                [Empty, Empty, TimerFlip(Available), Empty],
-                [Empty, Empty, Empty, Empty],
-                [FinalExit(Orange), Empty, Empty, Empty],
-            ],
-            horz_walls: [
-                [Blocked, Blocked, Explore(Yellow), Blocked],
-                [Open, Blocked, Blocked, Open],
-                [Blocked, Open, Open, Blocked],
-                [Open, Blocked, Blocked, Open],
-                [Open, Entrance, Open, Open],
-            ],
-            vert_walls: [
-                [Blocked, Open, Open, Open, Blocked],
-                [Blocked, Open, Blocked, Open, Blocked],
-                [Blocked, Open, Blocked, Open, Blocked],
-                [Blocked, Blocked, Open, Open, Blocked],
-            ],
-            escalators: arrayvec::ArrayVec::new(),
-        };
-        let expected = vec![tile1.clone()];
-        let mut tileset = "@tile1\n".to_string();
-        tileset.push_str(TILE_SIMPLE1);
-        assert_eq!(tileset_from_str(&tileset), Ok(expected), "parsing tileset");
 
+        assert_eq!(TILE1_STR.parse::<Tile>(), Ok(TILE1));
+        assert_eq!(TILE2_STR.parse::<Tile>(), Ok(TILE2));
+
+        let tileset_1 = format!("@tile1\n{}", TILE1_STR);
+        assert_eq!(tileset_from_str(&tileset_1), Ok(vec![TILE1.clone()]));
+
+        let tileset_12 = format!("@tile1\n{}\n@tile2\n{}", TILE1_STR, TILE2_STR);
         assert_eq!(
-            TILE_SIMPLE1.parse::<Tile>(),
-            Ok(tile1),
-            "parsing individual tile"
+            tileset_from_str(&tileset_12),
+            Ok(vec![TILE1.clone(), TILE2.clone()]),
         );
     }
 
     #[test]
     fn tile_negative() {
+        crate::init_logging();
+        assert_eq!(tileset_from_str(""), Ok(vec![]));
         let actual = tileset_from_str(TILE_MISSING_NAME);
         assert!(
             matches!(actual, Err(TileParsingError::InvalidNameLeader { .. })),

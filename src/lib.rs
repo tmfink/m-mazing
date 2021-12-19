@@ -30,5 +30,10 @@ impl GameState {
 
 #[cfg(test)]
 pub(crate) fn init_logging() {
-    env_logger::init();
+    use std::sync::Once;
+
+    static LOGGING: Once = Once::new();
+    LOGGING.call_once(|| {
+        env_logger::init();
+    });
 }
