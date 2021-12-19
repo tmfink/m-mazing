@@ -4,13 +4,6 @@ use thiserror::Error;
 use super::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ParsingState {
-    TileName,
-    WallRow { row_num: u32 },
-    CellRow { row_num: u32 },
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RowType {
     Wall,
     Cell,
@@ -73,8 +66,6 @@ pub enum TileParsingError {
     NoMoreTiles,
 }
 
-//pub fn tileset_from_file()
-
 pub fn tileset_from_str(s: &str) -> Result<Vec<Tile>, TileParsingError> {
     info!("Parsing tileset");
     tileset_from_lines(s.lines())
@@ -111,11 +102,12 @@ where
     })
 }
 
-pub fn tileset_from_lines<L, S>(mut lines: L) -> Result<Vec<Tile>, TileParsingError>
+fn tileset_from_lines<L, S>(mut lines: L) -> Result<Vec<Tile>, TileParsingError>
 where
     L: Iterator<Item = S>,
     S: AsRef<[u8]>,
 {
+    let mut lines = lines.enumerate().map(|(idx, line)| (idx + 1, line));
     let mut tileset = Vec::new();
 
     loop {
@@ -129,11 +121,25 @@ where
     Ok(tileset)
 }
 
-pub fn tile_from_lines<L, S>(lines: &mut L) -> Result<Tile, TileParsingError>
+pub(super) fn tile_from_str(s: &str) -> Result<Tile, TileParsingError> {
+    let mut lines = s.lines().enumerate().map(|(idx, line)| (idx + 1, line));
+    tile_from_lines(&mut lines)
+}
+
+/// Creates a `Tile` from an iterator that produces (line_number, line).
+/// *line_number* is 1-based indexing.
+fn tile_from_lines<L, S>(lines: &mut L) -> Result<Tile, TileParsingError>
 where
-    L: Iterator<Item = S>,
+    L: Iterator<Item = (usize, S)>,
     S: AsRef<[u8]>,
 {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ParsingState {
+        TileName,
+        WallRow { row_num: u32 },
+        CellRow { row_num: u32 },
+    }
+
     // todo: escalator
     let mut line_number = 0;
 
@@ -142,9 +148,9 @@ where
     let mut tile = Tile::default();
     let mut tile_name: Option<String> = None;
 
-    for line_x in lines {
+    for (line_number_x, line_x) in lines {
+        line_number = line_number_x as u32;
         let line = line_x.as_ref();
-        line_number += 1;
 
         let ctx = ParseContext { line, line_number };
 

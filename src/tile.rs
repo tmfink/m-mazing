@@ -135,7 +135,7 @@ impl Tile {
 impl FromStr for Tile {
     type Err = tileset::TileParsingError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        tileset::tile_from_lines(&mut s.lines())
+        tileset::tile_from_str(s)
     }
 }
 
