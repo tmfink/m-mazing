@@ -30,11 +30,8 @@ pub enum TileParsingError {
     #[error("Expected tile name leader '@', at line {line_number} found line {line:?}")]
     InvalidNameLeader { line_number: u32, line: String },
 
-    #[error("Finished parsing at line {line_number} before finishing tile {name:?}")]
-    IncompleteTile {
-        line_number: u32,
-        name: Option<String>,
-    },
+    #[error("Incomple tile at line {line_number}")]
+    IncompleteTile { line_number: u32 },
 
     #[error("Expected ASCII tilename, at line {line_number} found {name:?}")]
     InvalidTileName { line_number: u32, name: String },
@@ -102,7 +99,7 @@ where
     })
 }
 
-fn tileset_from_lines<L, S>(mut lines: L) -> Result<Vec<Tile>, TileParsingError>
+fn tileset_from_lines<L, S>(lines: L) -> Result<Vec<Tile>, TileParsingError>
 where
     L: Iterator<Item = S>,
     S: AsRef<[u8]>,
@@ -111,11 +108,42 @@ where
     let mut tileset = Vec::new();
 
     loop {
-        match tile_from_lines(&mut lines) {
-            Ok(tile) => tileset.push(tile),
-            Err(TileParsingError::NoMoreTiles) => break,
-            Err(err) => return Err(err),
+        let line = lines.next();
+        let (line_number, line) = match &line {
+            Some((line_number, line)) => (*line_number as u32, line.as_ref()),
+            None => break,
+        };
+
+        debug!(
+            "tileset line {}: {:?}",
+            line_number,
+            String::from_utf8_lossy(line),
+        );
+
+        if skip_tile_line(line) {
+            continue;
         }
+
+        let (leader, tail) = match *line {
+            [] => unreachable!(),
+            [leader, ref tail @ ..] => (leader, tail),
+        };
+        if leader != b'@' {
+            let line = String::from_utf8_lossy(line).to_string();
+            return Err(TileParsingError::InvalidNameLeader { line_number, line });
+        }
+        if !tail.is_ascii() {
+            return Err(TileParsingError::InvalidTileName {
+                line_number,
+                name: String::from_utf8_lossy(tail).to_string(),
+            });
+        }
+        // todo: save tile name
+        let tile_name = String::from_utf8(tail.to_vec()).unwrap();
+        debug!("parsed tile_name {:?}", tile_name);
+
+        let tile = tile_from_lines(&mut lines)?;
+        tileset.push(tile);
     }
 
     Ok(tileset)
@@ -124,6 +152,10 @@ where
 pub(super) fn tile_from_str(s: &str) -> Result<Tile, TileParsingError> {
     let mut lines = s.lines().enumerate().map(|(idx, line)| (idx + 1, line));
     tile_from_lines(&mut lines)
+}
+
+fn skip_tile_line(line: &[u8]) -> bool {
+    matches!(line.get(0), None | Some(b'#'))
 }
 
 /// Creates a `Tile` from an iterator that produces (line_number, line).
@@ -135,7 +167,6 @@ where
 {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum ParsingState {
-        TileName,
         WallRow { row_num: u32 },
         CellRow { row_num: u32 },
     }
@@ -143,10 +174,9 @@ where
     // todo: escalator
     let mut line_number = 0;
 
-    let mut state = ParsingState::TileName;
+    let mut state = ParsingState::WallRow { row_num: 0 };
 
     let mut tile = Tile::default();
-    let mut tile_name: Option<String> = None;
 
     for (line_number_x, line_x) in lines {
         line_number = line_number_x as u32;
@@ -161,34 +191,12 @@ where
             state
         );
 
-        match line.get(0) {
-            None | Some(b'#') => continue,
-            _ => (),
+        if skip_tile_line(line) {
+            continue;
         }
 
         let mut cursor = line.iter().copied().enumerate();
         match state {
-            ParsingState::TileName => {
-                let (leader, tail) = match *line {
-                    [] => unreachable!(),
-                    [leader, ref tail @ ..] => (leader, tail),
-                };
-                if leader != b'@' {
-                    let line = String::from_utf8_lossy(line).to_string();
-                    return Err(TileParsingError::InvalidNameLeader { line_number, line });
-                }
-                if !tail.is_ascii() {
-                    return Err(TileParsingError::InvalidTileName {
-                        line_number,
-                        name: String::from_utf8_lossy(tail).to_string(),
-                    });
-                }
-                tile_name = Some(String::from_utf8(tail.to_vec()).unwrap());
-                tile = Tile::default();
-                state = ParsingState::WallRow { row_num: 0 };
-
-                continue;
-            }
             ParsingState::WallRow { row_num } => {
                 let walls = if let Some(walls) = tile.horz_walls.get_mut(row_num as usize) {
                     walls.iter_mut()
@@ -255,12 +263,8 @@ where
     }
 
     match state {
-        ParsingState::TileName => Err(TileParsingError::NoMoreTiles),
         ParsingState::CellRow { .. } | ParsingState::WallRow { .. } => {
-            Err(TileParsingError::IncompleteTile {
-                line_number,
-                name: tile_name,
-            })
+            Err(TileParsingError::IncompleteTile { line_number })
         }
     }
 }
@@ -274,7 +278,6 @@ mod test {
     use WallState::*;
 
     const TILE_SIMPLE1: &str = "
-@1
 +-+-+7+-+
 |  1   c|
 + +-+-+ +
@@ -324,8 +327,15 @@ mod test {
             escalators: arrayvec::ArrayVec::new(),
         };
         let expected = vec![tile1.clone()];
-        assert_eq!(tileset_from_str(TILE_SIMPLE1), Ok(expected));
-        assert_eq!(TILE_SIMPLE1.parse::<Tile>(), Ok(tile1));
+        let mut tileset = "@tile1\n".to_string();
+        tileset.push_str(TILE_SIMPLE1);
+        assert_eq!(tileset_from_str(&tileset), Ok(expected), "parsing tileset");
+
+        assert_eq!(
+            TILE_SIMPLE1.parse::<Tile>(),
+            Ok(tile1),
+            "parsing individual tile"
+        );
     }
 
     #[test]
