@@ -68,6 +68,9 @@ pub enum TileParsingError {
         name: &'static str,
         allowed: &'static str,
     },
+
+    #[error("No more tiles found")]
+    NoMoreTiles,
 }
 
 //pub fn tileset_from_file()
@@ -108,7 +111,25 @@ where
     })
 }
 
-pub fn tileset_from_lines<L, S>(lines: L) -> Result<Vec<Tile>, TileParsingError>
+pub fn tileset_from_lines<L, S>(mut lines: L) -> Result<Vec<Tile>, TileParsingError>
+where
+    L: Iterator<Item = S>,
+    S: AsRef<[u8]>,
+{
+    let mut tileset = Vec::new();
+
+    loop {
+        match tile_from_lines(&mut lines) {
+            Ok(tile) => tileset.push(tile),
+            Err(TileParsingError::NoMoreTiles) => break,
+            Err(err) => return Err(err),
+        }
+    }
+
+    Ok(tileset)
+}
+
+pub fn tile_from_lines<L, S>(lines: &mut L) -> Result<Tile, TileParsingError>
 where
     L: Iterator<Item = S>,
     S: AsRef<[u8]>,
@@ -116,7 +137,6 @@ where
     // todo: escalator
     let mut line_number = 0;
 
-    let mut tileset = Vec::new();
     let mut state = ParsingState::TileName;
 
     let mut tile = Tile::default();
@@ -143,9 +163,9 @@ where
         let mut cursor = line.iter().copied().enumerate();
         match state {
             ParsingState::TileName => {
-                let (leader, tail) = match line {
-                    &[] => unreachable!(),
-                    &[leader, ref tail @ ..] => (leader, tail),
+                let (leader, tail) = match *line {
+                    [] => unreachable!(),
+                    [leader, ref tail @ ..] => (leader, tail),
                 };
                 if leader != b'@' {
                     let line = String::from_utf8_lossy(line).to_string();
@@ -182,8 +202,7 @@ where
                 if row_num == Tile::CELL_GRID_WIDTH as u32 {
                     // done with current tile
                     debug!("Parsed tile {:#?}", tile);
-                    tileset.push(tile.clone());
-                    state = ParsingState::TileName;
+                    return Ok(tile);
                 } else {
                     state = ParsingState::CellRow { row_num };
                 }
@@ -219,6 +238,7 @@ where
             }
         }
 
+        // Ensure row does not have extra
         if let Some((col_number, _c)) = cursor.next() {
             return Err(TileParsingError::RowHasExtra {
                 line: String::from_utf8_lossy(line).to_string(),
@@ -229,7 +249,7 @@ where
     }
 
     match state {
-        ParsingState::TileName => Ok(tileset),
+        ParsingState::TileName => Err(TileParsingError::NoMoreTiles),
         ParsingState::CellRow { .. } | ParsingState::WallRow { .. } => {
             Err(TileParsingError::IncompleteTile {
                 line_number,
@@ -297,8 +317,9 @@ mod test {
             ],
             escalators: arrayvec::ArrayVec::new(),
         };
-        let expected = vec![tile1];
+        let expected = vec![tile1.clone()];
         assert_eq!(tileset_from_str(TILE_SIMPLE1), Ok(expected));
+        assert_eq!(TILE_SIMPLE1.parse::<Tile>(), Ok(tile1));
     }
 
     #[test]

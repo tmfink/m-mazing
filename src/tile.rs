@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::Pawn;
 
 pub mod tileset;
@@ -128,6 +130,13 @@ pub struct Tile {
 impl Tile {
     pub const CELL_GRID_WIDTH: u32 = 4;
     const MAX_ESCALATORS_PER_TILE: u32 = 4;
+}
+
+impl FromStr for Tile {
+    type Err = tileset::TileParsingError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        tileset::tile_from_lines(&mut s.lines())
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
