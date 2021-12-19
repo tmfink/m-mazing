@@ -260,6 +260,18 @@ mod test {
 + +^+ + +
 ";
 
+    const TILE_MISSING_NAME: &str = "
++-+-+7+-+
+|  1   c|
++ +-+-+ +
+|   |t  |
++-+ + +-+
+|   |   |
++ +-+-+ +
+|O|     |
++ +^+ + +
+";
+
     #[test]
     fn tile_simple() {
         crate::init_logging();
@@ -286,8 +298,16 @@ mod test {
             escalators: arrayvec::ArrayVec::new(),
         };
         let expected = vec![tile1];
-        assert_eq!(tileset_from_str(TILE_SIMPLE1.trim()), Ok(expected));
+        assert_eq!(tileset_from_str(TILE_SIMPLE1), Ok(expected));
     }
 
-    // todo: add negative tests
+    #[test]
+    fn tile_negative() {
+        let actual = tileset_from_str(TILE_MISSING_NAME);
+        assert!(
+            matches!(actual, Err(TileParsingError::InvalidNameLeader { .. })),
+            "actual = {:?}",
+            actual
+        );
+    }
 }
