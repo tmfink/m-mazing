@@ -63,7 +63,7 @@ pub enum TileParsingError {
     NoMoreTiles,
 }
 
-pub fn tileset_from_str(s: &str) -> Result<Vec<Tile>, TileParsingError> {
+pub fn tileset_from_str(s: &str) -> Result<Vec<(String, Tile)>, TileParsingError> {
     info!("Parsing tileset");
     tileset_from_lines(s.lines())
 }
@@ -99,7 +99,7 @@ where
     })
 }
 
-fn tileset_from_lines<L, S>(lines: L) -> Result<Vec<Tile>, TileParsingError>
+fn tileset_from_lines<L, S>(lines: L) -> Result<Vec<(String, Tile)>, TileParsingError>
 where
     L: Iterator<Item = S>,
     S: AsRef<[u8]>,
@@ -143,7 +143,7 @@ where
         debug!("parsed tile_name {:?}", tile_name);
 
         let tile = tile_from_lines(&mut lines)?;
-        tileset.push(tile);
+        tileset.push((tile_name, tile));
     }
 
     Ok(tileset)
@@ -365,12 +365,18 @@ mod test {
         assert_eq!(TILE2_STR.parse::<Tile>(), Ok(TILE2));
 
         let tileset_1 = format!("@tile1\n{}", TILE1_STR);
-        assert_eq!(tileset_from_str(&tileset_1), Ok(vec![TILE1.clone()]));
+        assert_eq!(
+            tileset_from_str(&tileset_1),
+            Ok(vec![("tile1".to_string(), TILE1.clone()),])
+        );
 
         let tileset_12 = format!("@tile1\n{}\n@tile2\n{}", TILE1_STR, TILE2_STR);
         assert_eq!(
             tileset_from_str(&tileset_12),
-            Ok(vec![TILE1.clone(), TILE2.clone()]),
+            Ok(vec![
+                ("tile1".to_string(), TILE1.clone()),
+                ("tile2".to_string(), TILE2.clone()),
+            ]),
         );
     }
 
