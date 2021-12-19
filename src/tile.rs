@@ -18,9 +18,6 @@ pub enum TileCell {
     /// Pawn walk freely through
     Empty,
 
-    /// Blocked off
-    Inaccessible,
-
     // Pawn can be warped to this point
     Warp(Pawn),
 
@@ -45,12 +42,11 @@ impl Default for TileCell {
 
 impl TileTokenParse for TileCell {
     const NAME: &'static str = "TileCell";
-    const ALLOWED_CHARS: &'static str = " 1234GOYPgoypcXt";
+    const ALLOWED_CHARS: &'static str = " 1234GOYPgoypct";
 
     fn parse(value: u8) -> Option<Self> {
         Some(match value {
             b' ' => Self::Empty,
-            b'X' => Self::Inaccessible,
 
             // Warp
             b'1' => Self::Warp(Pawn::Green),

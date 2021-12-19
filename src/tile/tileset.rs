@@ -319,7 +319,7 @@ mod test {
 +-+ + +-+
 |2    | 5
 +-+ + +-+
-|1    |X|
+|1    | |
 +-+7+-+-+
 ";
     const TILE2: Tile = Tile {
@@ -327,7 +327,7 @@ mod test {
             [TimerFlip(Available), Empty, Empty, Warp(Purple)],
             [Empty, Empty, Empty, Warp(Yellow)],
             [Warp(Orange), Empty, Empty, Empty],
-            [Warp(Green), Empty, Empty, Inaccessible],
+            [Warp(Green), Empty, Empty, Empty],
         ],
         horz_walls: [
             [Blocked, Blocked, Explore(Orange), Blocked],
