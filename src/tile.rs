@@ -124,8 +124,8 @@ pub struct Tile {
 }
 
 impl Tile {
-    pub const CELL_GRID_WIDTH: u32 = 4;
-    const MAX_ESCALATORS_PER_TILE: u32 = 4;
+    pub const CELL_GRID_WIDTH: u8 = 4;
+    const MAX_ESCALATORS_PER_TILE: u8 = 4;
 }
 
 impl FromStr for Tile {
@@ -142,12 +142,20 @@ pub enum CellItemAvailability {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct TilePoint {
+pub struct TilePoint {
     x: u8,
     y: u8,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct EscalatorLocation {
-    endpoints: [TilePoint; 2],
+impl TilePoint {
+    pub const fn new(x: u8, y: u8) -> Option<Self> {
+        if x < Tile::CELL_GRID_WIDTH && y < Tile::CELL_GRID_WIDTH {
+            Some(Self { x, y })
+        } else {
+            None
+        }
+    }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct EscalatorLocation([TilePoint; 2]);
