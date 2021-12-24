@@ -1,0 +1,72 @@
+### KEY ###
+# @TILE_NAME
+# + cell corner placeholder (no data)
+# ^ entrance
+# - or |  wall
+# 1,2,3,4 - warp destination (Green, Orange, Yellow, Purple)
+#    1 - Green
+#    2 - Orange
+#    3 - Yellow
+#    4 - Purple
+# 5,6,7,8 - explore tile exit
+#    5 - Green
+#    6 - Orange
+#    7 - Yellow
+#    8 - Purple
+# (space) - exit/open cell
+# g,o,y,p - pawn loot
+#    g - Green
+#    o - Orange
+#    y - Yellow
+#    p - Purple
+# G,O,Y,P - final pawn exit
+#    G - Green
+#    O - Orange
+#    Y - Yellow
+#    P - Purple
+# c - camera
+# t - timer
+# E: comma-separated list of escalators (place after tile body)
+#    ab-cd --> escalator with points at (a, b) and (c, d) [0-based index]
+
+
+## Start blocks
+
+@1a
++-+-+6+-+
+|      4|
++-+ + +-+
+8      3|
++-+ + +-+
+|2    | 5
++-+ + +-+
+|1    | |
++-+7+ +-+
+E: 23-32
+
+@1b
++-+-+5+-+
+|t|     |
++ + +-+ +
+8 |   | |
++ + + + +
+|     | 7
++ +-+-+-+
+|     | |
++-+6+ +-+
+E: 23-32
+
+
+## Explored blocks
+
+@2
++ +-+5+-+
+|P|     |
++ + + +-+
+| |   |4|
++-+ +-+ +
+| | |   ^
++ +-+ +-+
+| |    1|
++-+6+ +-+
+E: 01-13

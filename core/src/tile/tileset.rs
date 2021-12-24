@@ -121,7 +121,7 @@ where
 
     T::parse(c).ok_or_else(|| TileParsingError::ItemParse {
         col_number: col_number as u32,
-        line_number: ctx.line_number + 1,
+        line_number: ctx.line_number,
         line: String::from_utf8_lossy(ctx.line).to_string(),
         char: char::from_u32(c as u32).unwrap_or(char::REPLACEMENT_CHARACTER),
         name: T::NAME,
