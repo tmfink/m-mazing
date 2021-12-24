@@ -78,7 +78,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "m-mazing"
+name = "m-mazing-core"
 version = "0.1.0"
 dependencies = [
  "arrayvec",
