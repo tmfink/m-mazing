@@ -4,7 +4,7 @@ use log::*;
 //use m_mazing_core::*;
 
 use anyhow::{Context, Result};
-use clap::Parser;
+use clap::{ArgEnum, Parser};
 
 /// Utility to debug Tiles
 #[derive(Parser, Debug)]
@@ -14,8 +14,19 @@ struct Args {
     #[clap(flatten)]
     verbose: clap_verbosity_flag::Verbosity,
 
+    /// Format to render
+    #[clap(arg_enum, long, short, default_value = "Render::TextDebug")]
+    render: Render,
+
     /// File (defaults to stdin) with tiles
+    #[clap(long, short)]
     tile_file: Option<PathBuf>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
+#[clap(rename_all = kebab-case)]
+enum Render {
+    TextDebug,
 }
 
 fn init_logging(args: &Args) {
