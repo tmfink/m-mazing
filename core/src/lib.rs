@@ -14,13 +14,13 @@ pub enum Pawn {
 
 pub struct GameState {
     num_players: u8,
-    roles: &'static [&'static [action::BoardAction]],
+    _roles: &'static [&'static [action::BoardAction]],
 }
 
 impl GameState {
     pub fn new(num_players: u8) -> Option<Self> {
-        let roles = crate::role::game_roles(num_players)?;
-        Some(GameState { num_players, roles })
+        let _roles = crate::role::game_roles(num_players)?;
+        Some(GameState { num_players, _roles })
     }
 
     pub fn num_players(&self) -> u8 {
