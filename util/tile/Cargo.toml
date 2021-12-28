@@ -6,11 +6,16 @@ authors = ["Travis Finkenauer <tmfinken@gmail.com>"]
 license = "MIT OR Apache-2.0"
 categories = ["games"]
 
+[features]
+default = ["gui"]
+gui = []
+
 [dependencies]
 m-mazing-core = { path = "../../core" }
 
 anyhow = "1.0"
 clap = { version = "3.0.0-rc.8", features = ["derive"] }
 clap-verbosity-flag = { git = "https://github.com/tmfink/clap-verbosity-flag", branch = "clap-3.0.0-rc.8" }
+macroquad = "0.3"
 simple_logger = "1.16"
 log = "0.4"
