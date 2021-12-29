@@ -87,6 +87,10 @@ async fn main() -> Result<()> {
     loop {
         mq::clear_background(render.theme.bg_color);
 
+        if mq::is_key_pressed(mq::KeyCode::Q) | mq::is_key_pressed(mq::KeyCode::Escape) {
+            break;
+        }
+
         let text = if let Some((tile_name, _tile)) = tile {
             format!("TILE: {}", tile_name)
             // todo: render tile
@@ -94,15 +98,22 @@ async fn main() -> Result<()> {
             "no tile".to_string()
         };
 
+        let (font_size, font_scale, font_scale_aspect) =
+            mq::camera_font_scale(render.theme.font_size);
         draw_text_align(
             &text,
             AlignHoriz::Center,
             AlignVert::Bottom,
             mq::TextParams {
                 color: render.theme.font_color,
-                ..Default::default()
+                font_size,
+                font_scale,
+                font_scale_aspect,
+                font: Default::default(),
             },
         );
         mq::next_frame().await
     }
+
+    Ok(())
 }

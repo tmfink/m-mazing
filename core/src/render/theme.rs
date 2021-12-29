@@ -12,7 +12,7 @@ impl Default for Theme {
         Theme {
             bg_color: mq::WHITE,
             font_color: mq::DARKGRAY,
-            font_size: 30.,
+            font_size: 40.,
         }
     }
 }
