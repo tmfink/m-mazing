@@ -2,6 +2,12 @@ pub mod action;
 pub mod role;
 pub mod tile;
 
+#[cfg(feature = "gui")]
+pub mod render;
+
+#[cfg(feature = "gui")]
+pub use macroquad;
+
 pub struct PlayerId(u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -12,8 +18,9 @@ pub enum Pawn {
     Purple,
 }
 
+#[derive(Clone, Debug)]
 pub struct GameState {
-    num_players: u8,
+    pub num_players: u8,
     _roles: &'static [&'static [action::BoardAction]],
 }
 

@@ -8,10 +8,10 @@ categories = ["games"]
 
 [features]
 default = ["gui"]
-gui = []
+gui = ["m-mazing-core/gui"]
 
 [dependencies]
-m-mazing-core = { path = "../../core" }
+m-mazing-core = { path = "../../core", default-features = false }
 
 anyhow = "1.0"
 clap = { version = "3.0.0-rc.8", features = ["derive"] }

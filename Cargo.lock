@@ -340,6 +340,7 @@ dependencies = [
  "arrayvec",
  "env_logger",
  "log",
+ "macroquad",
  "once_cell",
  "thiserror",
 ]

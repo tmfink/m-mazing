@@ -7,11 +7,15 @@ license = "MIT OR Apache-2.0"
 categories = ["games"]
 description = "Common logic for game based on Magic Maze"
 
+[features]
+default = ["gui"]
+gui = ["macroquad"]
 
 [dependencies]
 arrayvec = "0.7"
 env_logger = "0.9"
 log = "0.4"
+macroquad = { version = "0.3", optional = true }
 thiserror = "1"
 
 [dev-dependencies]

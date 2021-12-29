@@ -8,7 +8,7 @@ use macroquad::logging::*;
 #[cfg(feature = "gui")]
 use macroquad::prelude as mq;
 
-use m_core::tile::Tile;
+use m_core::{render::*, tile::Tile};
 use m_mazing_core as m_core;
 
 /// Utility to debug Tiles
@@ -79,14 +79,30 @@ fn main() -> Result<()> {
 #[macroquad::main("M-Mazing Tile Util")]
 async fn main() -> Result<()> {
     let ctx = get_ctx().with_context(|| "Failed to generate context")?;
+    let render = m_core::render::RenderState::default();
+
     debug!("tileset: {:#?}", ctx.tileset);
+    let tile = ctx.tileset.first();
+
     loop {
-        mq::clear_background(mq::Color {
-            r: 1.,
-            g: 1.,
-            b: 1.,
-            a: 1.,
-        });
+        mq::clear_background(render.theme.bg_color);
+
+        let text = if let Some((tile_name, _tile)) = tile {
+            format!("TILE: {}", tile_name)
+            // todo: render tile
+        } else {
+            "no tile".to_string()
+        };
+
+        draw_text_align(
+            &text,
+            AlignHoriz::Center,
+            AlignVert::Bottom,
+            mq::TextParams {
+                color: render.theme.font_color,
+                ..Default::default()
+            },
+        );
         mq::next_frame().await
     }
 }
