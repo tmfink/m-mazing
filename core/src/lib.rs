@@ -27,7 +27,10 @@ pub struct GameState {
 impl GameState {
     pub fn new(num_players: u8) -> Option<Self> {
         let _roles = crate::role::game_roles(num_players)?;
-        Some(GameState { num_players, _roles })
+        Some(GameState {
+            num_players,
+            _roles,
+        })
     }
 
     pub fn num_players(&self) -> u8 {
