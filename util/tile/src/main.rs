@@ -91,13 +91,23 @@ async fn main() -> Result<()> {
             break;
         }
 
-        let text = if let Some((tile_name, _tile)) = tile {
+        // todo: smarter camera set (zoom to fill while preserving aspect ratio)
+        mq::set_camera(&mq::Camera2D::from_display_rect(mq::Rect {
+            x: -3.,
+            y: -3.,
+            w: 6.,
+            h: 6.,
+        }));
+
+        let text = if let Some((tile_name, tile)) = tile {
+            tile.render(mq::Vec2::default(), &render);
             format!("TILE: {}", tile_name)
-            // todo: render tile
         } else {
             "no tile".to_string()
         };
 
+        // screen space camera for text
+        mq::set_default_camera();
         let (font_size, font_scale, font_scale_aspect) =
             mq::camera_font_scale(render.theme.font_size);
         draw_text_align(
