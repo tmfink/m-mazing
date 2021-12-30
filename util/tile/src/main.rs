@@ -8,7 +8,10 @@ use macroquad::logging::*;
 #[cfg(feature = "gui")]
 use macroquad::prelude as mq;
 
-use m_core::{render::*, tile::Tile};
+#[cfg(feature = "gui")]
+use m_core::render::*;
+
+use m_core::tile::Tile;
 use m_mazing_core as m_core;
 
 /// Utility to debug Tiles
@@ -91,13 +94,15 @@ async fn main() -> Result<()> {
             break;
         }
 
-        // todo: smarter camera set (zoom to fill while preserving aspect ratio)
-        mq::set_camera(&mq::Camera2D::from_display_rect(mq::Rect {
+        // todo: smarter fit rect for all tiles
+        let fit_rect = mq::Rect {
             x: -3.,
             y: -3.,
             w: 6.,
             h: 6.,
-        }));
+        };
+        let whole_camera = m_core::render::camera::camera_zoom_to_fit(fit_rect);
+        mq::set_camera(&whole_camera);
 
         let text = if let Some((tile_name, tile)) = tile {
             tile.render(mq::Vec2::default(), &render);

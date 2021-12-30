@@ -13,6 +13,7 @@ pub struct Theme {
     pub pawn_orange_color: mq::Color,
     pub pawn_yellow_color: mq::Color,
     pub pawn_purple_color: mq::Color,
+    pub timer_color: mq::Color,
 }
 
 impl Default for Theme {
@@ -34,6 +35,7 @@ impl Default for Theme {
             pawn_orange_color: mq::ORANGE,
             pawn_yellow_color: mq::YELLOW,
             pawn_purple_color: mq::PURPLE,
+            timer_color: mq::RED,
         }
     }
 }

@@ -40,6 +40,15 @@ impl Default for TileCell {
     }
 }
 
+impl TileCell {
+    pub fn is_used(self) -> bool {
+        use CellItemAvailability::*;
+        use TileCell::*;
+
+        matches!(self, TimerFlip(Used) | Camera(Used))
+    }
+}
+
 impl TileTokenParse for TileCell {
     const NAME: &'static str = "TileCell";
     const ALLOWED_CHARS: &'static str = " 1234GOYPgoypct";
@@ -105,14 +114,6 @@ impl Default for WallState {
     fn default() -> Self {
         Self::Open
     }
-}
-
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct OuterWalls {
-    top: [WallState; Tile::CELL_GRID_WIDTH as usize],
-    left: [WallState; Tile::CELL_GRID_WIDTH as usize],
-    right: [WallState; Tile::CELL_GRID_WIDTH as usize],
-    bottom: [WallState; Tile::CELL_GRID_WIDTH as usize],
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
