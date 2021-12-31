@@ -65,6 +65,18 @@ fn render_loot(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
     );
 }
 
+fn render_final_exit(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
+    let offset = 0.5 * render.theme.wall_thickness;
+    mq::draw_rectangle(
+        x + offset,
+        y + offset,
+        CELL_WIDTH - 2.0 * offset,
+        CELL_WIDTH - 2.0 * offset,
+        pawn.as_color(render),
+    );
+    // todo: add arrow pointing outward
+}
+
 impl Render for Tile {
     fn render(&self, pos: mq::Vec2, render: &RenderState) {
         mq::draw_rectangle(
@@ -123,9 +135,9 @@ impl Render for Tile {
                     TileCell::TimerFlip(_) => render_timer(render, x, y),
                     TileCell::Warp(pawn) => render_warp(render, x, y, pawn),
                     TileCell::Loot(pawn) => render_loot(render, x, y, pawn),
+                    TileCell::FinalExit(pawn) => render_final_exit(render, x, y, pawn),
 
                     //TileCell::Camera(_) => todo!(),
-                    //TileCell::FinalExit(_) => todo!(),
                     TileCell::Empty => (),
                     _ => (),
                 }
