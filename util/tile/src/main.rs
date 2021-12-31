@@ -88,6 +88,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+// todo: manual mq::Window::new() to support anyhow::Result
 #[cfg(feature = "gui")]
 #[macroquad::main("M-Mazing Tile Util")]
 async fn main() -> Result<()> {

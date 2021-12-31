@@ -8,10 +8,10 @@ const CELL_WIDTH: f32 = 1.0;
 const CELL_HALF_WIDTH: f32 = 0.5 * CELL_WIDTH;
 
 fn render_timer(render: &RenderState, x: f32, y: f32) {
-    let x_left = x + 0.25;
-    let x_right = x + 0.75;
-    let y_top = y + 0.2;
-    let y_bottom = y + 0.8;
+    let x_left = x + 0.25 * CELL_WIDTH;
+    let x_right = x + 0.75 * CELL_WIDTH;
+    let y_top = y + 0.2 * CELL_WIDTH;
+    let y_bottom = y + 0.8 * CELL_WIDTH;
 
     let points = [
         mq::Vec2::new(x_left, y_top),
@@ -41,6 +41,28 @@ fn render_warp(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
         .zip(radii)
         .map(|(angle, radius)| mq::polar_to_cartesian(radius, angle) + center);
     shape::draw_connected_line(points, render.theme.warp_thickness, pawn.as_color(render));
+}
+
+fn render_loot(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
+    let x_left = x + 0.1 * CELL_WIDTH;
+    let x_mid = x + 0.5 * CELL_WIDTH;
+    let x_right = x + 0.9 * CELL_WIDTH;
+    let y_top = y + 0.1 * CELL_WIDTH;
+    let y_mid = y + 0.5 * CELL_WIDTH;
+    let y_bottom = y + 0.9 * CELL_WIDTH;
+
+    let points = [
+        mq::Vec2::new(x_right, y_mid),
+        mq::Vec2::new(x_mid, y_top),
+        mq::Vec2::new(x_left, y_mid),
+        mq::Vec2::new(x_mid, y_bottom),
+        mq::Vec2::new(x_right, y_mid),
+    ];
+    shape::draw_connected_line(
+        points.iter().copied(),
+        render.theme.wall_thickness,
+        pawn.as_color(render),
+    );
 }
 
 impl Render for Tile {
@@ -100,10 +122,10 @@ impl Render for Tile {
                 match cell {
                     TileCell::TimerFlip(_) => render_timer(render, x, y),
                     TileCell::Warp(pawn) => render_warp(render, x, y, pawn),
+                    TileCell::Loot(pawn) => render_loot(render, x, y, pawn),
 
                     //TileCell::Camera(_) => todo!(),
                     //TileCell::FinalExit(_) => todo!(),
-                    //TileCell::Loot(_) => todo!(),
                     TileCell::Empty => (),
                     _ => (),
                 }
