@@ -98,14 +98,22 @@ async fn main() -> Result<()> {
     init_logging(&ctx._args);
 
     debug!("tileset: {:#?}", ctx.tileset);
-    let tile = ctx.tileset.first();
+    let mut tile_idx: isize = 0;
 
     loop {
         mq::clear_background(render.theme.bg_color);
 
-        if mq::is_key_pressed(mq::KeyCode::Q) | mq::is_key_pressed(mq::KeyCode::Escape) {
+        if mq::is_key_pressed(mq::KeyCode::Q) || mq::is_key_pressed(mq::KeyCode::Escape) {
             break;
         }
+
+        if mq::is_key_pressed(mq::KeyCode::Right) || mq::is_key_pressed(mq::KeyCode::Down) {
+            tile_idx += 1;
+        } else if mq::is_key_pressed(mq::KeyCode::Left) || mq::is_key_pressed(mq::KeyCode::Up) {
+            tile_idx -= 1;
+        }
+        tile_idx %= ctx.tileset.len() as isize;
+        let tile = ctx.tileset.get(tile_idx as usize);
 
         // todo: smarter fit rect for all tiles
         let fit_rect = mq::Rect {
@@ -119,7 +127,7 @@ async fn main() -> Result<()> {
 
         let text = if let Some((tile_name, tile)) = tile {
             tile.render(mq::Vec2::default(), &render);
-            format!("TILE: {}", tile_name)
+            format!("TILE: {} (idx={})", tile_name, tile_idx)
         } else {
             "no tile".to_string()
         };
