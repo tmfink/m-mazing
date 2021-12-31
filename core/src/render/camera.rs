@@ -18,7 +18,8 @@ pub fn camera_zoom_to_fit(fit: mq::Rect) -> mq::Camera2D {
     if current_aspect_ratio >= desired_aspect_ratio {
         trace!(
             "    Window too wide; want {} but am currently {}",
-            desired_aspect_ratio, current_aspect_ratio
+            desired_aspect_ratio,
+            current_aspect_ratio
         );
         w = fit.w * current_aspect_ratio;
         h = fit.h;
@@ -28,7 +29,8 @@ pub fn camera_zoom_to_fit(fit: mq::Rect) -> mq::Camera2D {
     } else {
         trace!(
             "    Window too tall; want {} but am currently {}",
-            desired_aspect_ratio, current_aspect_ratio
+            desired_aspect_ratio,
+            current_aspect_ratio
         );
         w = fit.w;
         h = fit.w / current_aspect_ratio;
