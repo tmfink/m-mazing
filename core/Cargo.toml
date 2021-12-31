@@ -10,13 +10,22 @@ description = "Common logic for game based on Magic Maze"
 [features]
 default = ["gui"]
 gui = ["macroquad"]
+log-rs = ["macroquad/log-rs"]
 
 [dependencies]
 arrayvec = "0.7"
+cfg-if = "1.0"
 env_logger = "0.9"
 log = "0.4"
-macroquad = { version = "0.3", optional = true }
 thiserror = "1"
+
+[dependencies.macroquad]
+#version = "0.3"
+# pending https://github.com/not-fl3/macroquad/pull/356 (trace macro)
+git = "https://github.com/tmfink/macroquad.git"
+rev = "4e4c5fba9eee7e52a94c00b30e78cb8cea47ac9e"
+optional = true
+default-features = false
 
 [dev-dependencies]
 once_cell = "1.9"

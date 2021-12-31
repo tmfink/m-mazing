@@ -1,15 +1,24 @@
 use std::{fs::File, io::Read, path::PathBuf};
 
 use anyhow::{Context, Result};
+use cfg_if::cfg_if;
 use clap::Parser;
-use log::Level;
-use macroquad::logging::*;
 
-#[cfg(feature = "gui")]
-use macroquad::prelude as mq;
+cfg_if! {
+    if #[cfg(feature = "gui")] {
+        use m_core::macroquad::prelude as mq;
+        use m_core::macroquad;
+        use m_core::render::*;
+    }
+}
 
-#[cfg(feature = "gui")]
-use m_core::render::*;
+cfg_if! {
+    if #[cfg(any(not(feature = "gui"), feature = "logs-rs"))] {
+        use log::*;
+    } else {
+        use m_core::macroquad::logging::*;
+    }
+}
 
 use m_core::tile::Tile;
 use m_mazing_core as m_core;
@@ -27,10 +36,8 @@ struct Args {
     tile_file: PathBuf,
 }
 
-#[cfg(not(feature = "gui"))]
+#[cfg(any(not(feature = "gui"), feature = "log-rs"))]
 fn init_logging(args: &Args) {
-    use log::LevelFilter;
-
     let level = match args.verbose.log_level() {
         None => LevelFilter::Off,
         Some(level) => match level {
@@ -41,8 +48,10 @@ fn init_logging(args: &Args) {
             Level::Trace => LevelFilter::Trace,
         },
     };
+
     simple_logger::SimpleLogger::new()
         .with_level(level)
+        .with_utc_timestamps()
         .init()
         .expect("Failed to init logging");
     info!("log verbosity: {:?}", level);
@@ -55,7 +64,7 @@ struct Ctx {
 
 fn get_ctx() -> Result<Ctx> {
     let mut _args = Args::parse();
-    _args.verbose.set_default(Some(Level::Info));
+    _args.verbose.set_default(Some(log::Level::Info));
 
     let mut tile_input_file = File::open(&_args.tile_file)
         .with_context(|| format!("Failed to open input file {:?}", &_args.tile_file))?;
@@ -72,17 +81,23 @@ fn get_ctx() -> Result<Ctx> {
 #[cfg(not(feature = "gui"))]
 fn main() -> Result<()> {
     let ctx = get_ctx().with_context(|| "Failed to generate context")?;
+
+    #[cfg(any(not(feature = "gui"), feature = "logs-rs"))]
     init_logging(&ctx._args);
-    print!("tileset: {:#?}", ctx.tileset);
+
+    println!("tileset: {:#?}", ctx.tileset);
 
     Ok(())
 }
 
 #[cfg(feature = "gui")]
-#[macroquad::main("M-Mazing Tile Util")]
+#[m_core::macroquad::main("M-Mazing Tile Util")]
 async fn main() -> Result<()> {
     let ctx = get_ctx().with_context(|| "Failed to generate context")?;
     let render = m_core::render::RenderState::default();
+
+    #[cfg(feature = "log-rs")]
+    init_logging(&ctx._args);
 
     debug!("tileset: {:#?}", ctx.tileset);
     let tile = ctx.tileset.first();

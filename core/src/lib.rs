@@ -2,11 +2,22 @@ pub mod action;
 pub mod role;
 pub mod tile;
 
-#[cfg(feature = "gui")]
-pub mod render;
+cfg_if! {
+    if #[cfg(feature = "gui")] {
+        pub mod render;
+        pub use macroquad;
+    }
+}
 
-#[cfg(feature = "gui")]
-pub use macroquad;
+cfg_if! {
+    if #[cfg(any(not(feature = "gui"), feature = "logs-rs"))] {
+        pub use log;
+    } else {
+        use macroquad::logging::*;
+    }
+}
+
+use cfg_if::cfg_if;
 
 pub struct PlayerId(u32);
 
