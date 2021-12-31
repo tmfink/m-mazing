@@ -18,6 +18,11 @@
 - [ ] Assets
     - [ ] Tiles pieces
     - [ ] Can use tile editor
+- [ ] Platforms
+    - [ ] Linux
+    - [ ] Windows
+    - [ ] Mac
+    - [ ] Web
 
 # Server
 
