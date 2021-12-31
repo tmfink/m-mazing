@@ -30,10 +30,13 @@ fn render_timer(render: &RenderState, x: f32, y: f32) {
 fn render_warp(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
     let center = mq::Vec2::new(x + CELL_HALF_WIDTH, y + CELL_HALF_WIDTH);
 
-    let angles = (0..8)
-        .map(|x| x as f32 * 2.0 * std::f32::consts::PI / 8.0)
+    const NUM_ANGLES: u32 = 8;
+    const NUM_RADII: u32 = 24;
+
+    let angles = (0..NUM_ANGLES)
+        .map(|x| x as f32 * 2.0 * std::f32::consts::PI / NUM_ANGLES as f32)
         .cycle();
-    let radii = (0..20).map(|x| x as f32 * CELL_HALF_WIDTH * 0.8 / 20.0);
+    let radii = (0..NUM_RADII).map(|x| x as f32 * CELL_HALF_WIDTH * 0.8 / NUM_RADII as f32);
     let points = angles
         .zip(radii)
         .map(|(angle, radius)| mq::polar_to_cartesian(radius, angle) + center);
