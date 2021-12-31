@@ -2,15 +2,13 @@ pub mod camera;
 pub mod shape;
 pub mod theme;
 
-use crate::{
-    tile::{Tile, TileCell, WallState},
-    Pawn,
-};
 use macroquad::prelude as mq;
+
+use crate::prelude::*;
 
 #[derive(Clone, Debug, Default)]
 pub struct RenderState {
-    pub theme: theme::Theme,
+    pub theme: Theme,
 }
 
 pub trait Render {

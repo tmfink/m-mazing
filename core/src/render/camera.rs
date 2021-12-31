@@ -1,4 +1,4 @@
-use crate::*;
+use crate::prelude::*;
 use macroquad::prelude as mq;
 
 /// Zoom camera to fit rectangle while maintaining aspect ratio

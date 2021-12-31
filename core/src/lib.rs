@@ -2,6 +2,16 @@ pub mod action;
 pub mod role;
 pub mod tile;
 
+pub mod prelude {
+    pub use crate::action::*;
+    pub use crate::role::*;
+    pub use crate::tile::{tileset::*, *};
+    pub use crate::*;
+
+    #[cfg(feature = "gui")]
+    pub use crate::render::{camera::*, shape::*, theme::*, *};
+}
+
 cfg_if! {
     if #[cfg(feature = "gui")] {
         pub mod render;

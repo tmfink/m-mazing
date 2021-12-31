@@ -4,11 +4,12 @@ use anyhow::{Context, Result};
 use cfg_if::cfg_if;
 use clap::Parser;
 
+use m_mazing_core::prelude::*;
+
 cfg_if! {
     if #[cfg(feature = "gui")] {
-        use m_core::macroquad::prelude as mq;
-        use m_core::macroquad;
-        use m_core::render::*;
+        use m_mazing_core::macroquad::prelude as mq;
+        use m_mazing_core::macroquad;
     }
 }
 
@@ -16,12 +17,9 @@ cfg_if! {
     if #[cfg(any(not(feature = "gui"), feature = "logs-rs"))] {
         use log::*;
     } else {
-        use m_core::macroquad::logging::*;
+        use m_mazing_core::macroquad::logging::*;
     }
 }
-
-use m_core::tile::Tile;
-use m_mazing_core as m_core;
 
 /// Utility to debug Tiles
 #[derive(Parser, Debug)]
@@ -91,10 +89,10 @@ fn main() -> Result<()> {
 }
 
 #[cfg(feature = "gui")]
-#[m_core::macroquad::main("M-Mazing Tile Util")]
+#[macroquad::main("M-Mazing Tile Util")]
 async fn main() -> Result<()> {
     let ctx = get_ctx().with_context(|| "Failed to generate context")?;
-    let render = m_core::render::RenderState::default();
+    let render = RenderState::default();
 
     #[cfg(feature = "log-rs")]
     init_logging(&ctx._args);
@@ -116,7 +114,7 @@ async fn main() -> Result<()> {
             w: 6.,
             h: 6.,
         };
-        let whole_camera = m_core::render::camera::camera_zoom_to_fit(fit_rect);
+        let whole_camera = camera_zoom_to_fit(fit_rect);
         mq::set_camera(&whole_camera);
 
         let text = if let Some((tile_name, tile)) = tile {
