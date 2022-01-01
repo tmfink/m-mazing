@@ -33,6 +33,9 @@ pub enum TileCell {
 
     /// Final exit tile
     FinalExit(Pawn),
+
+    /// Crystal ball
+    CrystalBall(CellItemAvailability),
 }
 
 impl Default for TileCell {
@@ -52,7 +55,7 @@ impl TileCell {
 
 impl TileTokenParse for TileCell {
     const NAME: &'static str = "TileCell";
-    const ALLOWED_CHARS: &'static str = " 1234GOYPgoypct";
+    const ALLOWED_CHARS: &'static str = " 1234GOYPgoypctb";
 
     fn parse(value: u8) -> Option<Self> {
         Some(match value {
@@ -78,6 +81,7 @@ impl TileTokenParse for TileCell {
 
             b't' => Self::TimerFlip(CellItemAvailability::Available),
             b'c' => Self::Camera(CellItemAvailability::Available),
+            b'b' => Self::CrystalBall(CellItemAvailability::Available),
 
             _ => return None,
         })

@@ -47,17 +47,18 @@ fn init_logging(args: &Args) {
     info!("log verbosity: {:?}", level);
 }
 
+#[allow(dead_code)]
 struct Ctx {
-    _args: Args,
+    args: Args,
     tileset: Vec<(String, Tile)>,
 }
 
 fn get_ctx() -> Result<Ctx> {
-    let mut _args = Args::parse();
-    _args.verbose.set_default(Some(log::Level::Info));
+    let mut args = Args::parse();
+    args.verbose.set_default(Some(log::Level::Info));
 
-    let mut tile_input_file = File::open(&_args.tile_file)
-        .with_context(|| format!("Failed to open input file {:?}", &_args.tile_file))?;
+    let mut tile_input_file = File::open(&args.tile_file)
+        .with_context(|| format!("Failed to open input file {:?}", &args.tile_file))?;
     let mut tile_str = String::new();
     tile_input_file
         .read_to_string(&mut tile_str)
@@ -65,7 +66,7 @@ fn get_ctx() -> Result<Ctx> {
     let tileset = m_mazing_core::tile::tileset::tileset_from_str(&tile_str)
         .with_context(|| "failed to parse tileset")?;
 
-    Ok(Ctx { _args, tileset })
+    Ok(Ctx { args, tileset })
 }
 
 #[cfg(not(feature = "gui"))]
@@ -73,9 +74,9 @@ fn main() -> Result<()> {
     let ctx = get_ctx().with_context(|| "Failed to generate context")?;
 
     #[cfg(any(not(feature = "gui"), feature = "logs-rs"))]
-    init_logging(&ctx._args);
+    init_logging(&ctx.args);
 
-    println!("tileset: {:#?}", ctx.tileset);
+    info!("tileset = {:#?}", ctx.tileset);
 
     Ok(())
 }
@@ -88,9 +89,9 @@ async fn main() -> Result<()> {
     let render = RenderState::default();
 
     #[cfg(feature = "log-rs")]
-    init_logging(&ctx._args);
+    init_logging(&ctx.args);
 
-    debug!("tileset: {:#?}", ctx.tileset);
+    info!("tileset: {:#?}", ctx.tileset);
     let mut tile_idx: isize = 0;
 
     loop {

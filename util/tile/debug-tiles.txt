@@ -26,6 +26,7 @@
 #    P - Purple
 # c - camera
 # t - timer
+# b - crystal (b)all (for purple pawn)
 # E: comma-separated list of escalators (place after tile body)
 #    ab-cd --> escalator with points at (a, b) and (c, d) [0-based index]
 
@@ -38,6 +39,6 @@
 +-+ + +-+
 |t 3 4|G 
 +-+ + +-+
-|o O t| |
+|o O b| |
 +-+ +-+-+
 E: 23-32
