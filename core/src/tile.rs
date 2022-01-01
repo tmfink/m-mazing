@@ -267,7 +267,15 @@ impl TilePoint {
         let new_y = (self.y as i8 + add.1).try_into().ok()?;
         TilePoint::new(new_x, new_y)
     }
+
+    pub fn x(self) -> u8 {
+        self.x
+    }
+
+    pub fn y(self) -> u8 {
+        self.y
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct EscalatorLocation([TilePoint; 2]);
+pub struct EscalatorLocation(pub [TilePoint; 2]);

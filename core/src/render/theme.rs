@@ -19,6 +19,8 @@ pub struct Theme {
     pub final_exit_arrow_color: mq::Color,
     pub camera_color: mq::Color,
     pub crystal_ball_color: mq::Color,
+    pub escalator_color: mq::Color,
+    pub escalator_thickness: f32,
 }
 
 impl Default for Theme {
@@ -46,6 +48,13 @@ impl Default for Theme {
             final_exit_arrow_color: mq::GRAY,
             camera_color: mq::BLACK,
             crystal_ball_color: mq::PURPLE,
+            escalator_color: mq::Color {
+                r: 0.44,
+                g: 0.3,
+                b: 0.39,
+                a: 1.0,
+            },
+            escalator_thickness: 0.2,
         }
     }
 }

@@ -119,6 +119,18 @@ fn render_crystal_ball(render: &RenderState, x: f32, y: f32) {
     gl.pop_model_matrix();
 }
 
+fn render_escalator(render: &RenderState, escalator: EscalatorLocation) {
+    let [a, b] = escalator.0;
+    mq::draw_line(
+        a.x() as f32 + 0.5,
+        a.y() as f32 + 0.5,
+        b.x() as f32 + 0.5,
+        b.y() as f32 + 0.5,
+        render.theme.escalator_thickness,
+        render.theme.escalator_color,
+    );
+}
+
 fn render_final_exit(
     render: &RenderState,
     x: f32,
@@ -159,7 +171,7 @@ fn render_final_exit(
     let color = render.theme.final_exit_arrow_color;
     let thickness = render.theme.warp_thickness;
     let endpoint = 0.5 - 2.0 * offset;
-    let arrowhead_width = 0.2;
+    let arrowhead_width = 0.3;
     let arrowhead_halfwidth = 0.5 * arrowhead_width;
     let arrowhead_length = 0.25;
     let arrowhead_back_x = endpoint - arrowhead_length;
@@ -252,6 +264,20 @@ impl Render for Tile {
             }
         }
 
-        // todo: render escalators
+        let gl = unsafe { mq::get_internal_gl().quad_gl };
+        let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
+        let translation = mq::Vec3::new(-2.0, -2.0, 0.);
+        let rotation = mq::Quat::IDENTITY;
+        gl.push_model_matrix(mq::Mat4::from_scale_rotation_translation(
+            scale,
+            rotation,
+            translation,
+        ));
+
+        for escalator in &self.escalators {
+            render_escalator(render, *escalator);
+        }
+
+        gl.pop_model_matrix();
     }
 }
