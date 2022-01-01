@@ -162,6 +162,12 @@ impl Direction {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum SpinDirection {
+    Clockwise,
+    CounterClockwise,
+}
+
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Tile {
     pub cells: [[TileCell; Self::CELL_GRID_WIDTH as usize]; Self::CELL_GRID_WIDTH as usize],
@@ -250,6 +256,10 @@ impl Tile {
 
     pub fn cells_mut(&mut self) -> impl Iterator<Item = &mut TileCell> {
         self.cells.iter_mut().flat_map(|row| row.iter_mut())
+    }
+
+    pub fn rotate(&mut self, _rotate: SpinDirection) {
+        todo!("spin")
     }
 }
 
