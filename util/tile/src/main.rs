@@ -13,6 +13,12 @@ cfg_if! {
     }
 }
 
+#[cfg(feature = "gui")]
+const LEGEND: &str = "
+Arrow keys - cycle between tiles;
+K/U - toggle cell availability
+";
+
 /// Utility to debug Tiles
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]
@@ -149,6 +155,19 @@ async fn main() -> Result<()> {
             &text,
             AlignHoriz::Center,
             AlignVert::Bottom,
+            mq::TextParams {
+                color: render.theme.font_color,
+                font_size,
+                font_scale,
+                font_scale_aspect,
+                font: Default::default(),
+            },
+        );
+
+        draw_text_align(
+            LEGEND.trim(),
+            AlignHoriz::Left,
+            AlignVert::Top,
             mq::TextParams {
                 color: render.theme.font_color,
                 font_size,
