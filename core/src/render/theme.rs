@@ -17,6 +17,7 @@ pub struct Theme {
     pub pawn_purple_color: mq::Color,
     pub timer_color: mq::Color,
     pub final_exit_arrow_color: mq::Color,
+    pub camera_color: mq::Color,
 }
 
 impl Default for Theme {
@@ -42,6 +43,7 @@ impl Default for Theme {
             pawn_purple_color: mq::PURPLE,
             timer_color: mq::RED,
             final_exit_arrow_color: mq::GRAY,
+            camera_color: mq::BLACK,
         }
     }
 }

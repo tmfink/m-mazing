@@ -65,6 +65,41 @@ fn render_loot(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
     );
 }
 
+fn render_camera(render: &RenderState, x: f32, y: f32) {
+    let gl = unsafe { mq::get_internal_gl().quad_gl };
+
+    let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
+    let translation = mq::Vec3::new(x + 0.5, y + 0.5, 0.);
+    let rotation = mq::Quat::IDENTITY;
+    gl.push_model_matrix(mq::Mat4::from_scale_rotation_translation(
+        scale,
+        rotation,
+        translation,
+    ));
+
+    let points = [
+        mq::Vec2::new(-0.35, 0.0),
+        mq::Vec2::new(-0.175, 0.15),
+        mq::Vec2::new(0.0, 0.2),
+        mq::Vec2::new(0.175, 0.15),
+        mq::Vec2::new(0.35, 0.0),
+    ];
+
+    let color = render.theme.camera_color;
+    shape::draw_connected_line(points.iter().copied(), render.theme.warp_thickness, color);
+    shape::draw_connected_line(
+        points.iter().copied().map(|mut v| {
+            v.y *= -1.0;
+            v
+        }),
+        render.theme.warp_thickness,
+        color,
+    );
+    mq::draw_circle(0.0, 0.0, 0.15, color);
+
+    gl.pop_model_matrix();
+}
+
 fn render_final_exit(
     render: &RenderState,
     x: f32,
@@ -191,8 +226,7 @@ impl Render for Tile {
                     TileCell::FinalExit(pawn) => {
                         render_final_exit(render, x, y, pawn, self, col_idx, row_idx)
                     }
-
-                    //TileCell::Camera(_) => todo!(),
+                    TileCell::Camera(_) => render_camera(render, x, y),
                     TileCell::Empty => (),
                     _ => (),
                 }
