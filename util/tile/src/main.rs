@@ -114,7 +114,7 @@ async fn main() -> Result<()> {
         if mq::is_key_pressed(mq::KeyCode::Left) || mq::is_key_pressed(mq::KeyCode::Up) {
             tile_idx -= 1;
         }
-        tile_idx %= ctx.tileset.len() as isize;
+        tile_idx = tile_idx.rem_euclid(ctx.tileset.len() as isize);
         let tile = ctx.tileset.get_mut(tile_idx as usize);
 
         if mq::is_key_pressed(mq::KeyCode::K) || mq::is_key_pressed(mq::KeyCode::U) {
