@@ -1,4 +1,4 @@
-use crate::action::*;
+use crate::prelude::*;
 
 pub fn game_roles(num_players: u8) -> Option<&'static [&'static [BoardAction]]> {
     if num_players == 0 {
@@ -15,13 +15,13 @@ const ALLOWED_ACTIONS: &[&[&[BoardAction]]] = &[
         &[
             BoardAction::Escalator,
             BoardAction::Explore,
-            BoardAction::Slide(Direction::South),
-            BoardAction::Slide(Direction::West),
+            BoardAction::Slide(Direction::Down),
+            BoardAction::Slide(Direction::Left),
         ],
         &[
             BoardAction::Warp,
-            BoardAction::Slide(Direction::North),
-            BoardAction::Slide(Direction::East),
+            BoardAction::Slide(Direction::Up),
+            BoardAction::Slide(Direction::Right),
         ],
     ],
 ];

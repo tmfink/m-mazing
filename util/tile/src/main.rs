@@ -13,14 +13,6 @@ cfg_if! {
     }
 }
 
-cfg_if! {
-    if #[cfg(any(not(feature = "gui"), feature = "logs-rs"))] {
-        use log::*;
-    } else {
-        use m_mazing_core::macroquad::logging::*;
-    }
-}
-
 /// Utility to debug Tiles
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]

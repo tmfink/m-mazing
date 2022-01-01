@@ -70,15 +70,21 @@ fn render_final_exit(
     x: f32,
     y: f32,
     pawn: Pawn,
-    _col_idx: usize,
-    _row_idx: usize,
+    tile: &Tile,
+    col_idx: usize,
+    row_idx: usize,
 ) {
     let gl = unsafe { mq::get_internal_gl().quad_gl };
 
     let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
-    // todo: get optimal display angle based on tiles
-    let angle = 0.0;
+
+    let point = TilePoint::new(col_idx as u8, row_idx as u8)
+        .expect("could not convert row/col idx to tile");
+
+    // Z-axis goes "into" the screen since this is right-handed
+    let angle = -tile.cell_exit_direction(point).as_angle();
     let rotation = mq::Quat::from_rotation_z(angle);
+
     let translation = mq::Vec3::new(x + 0.5, y + 0.5, 0.);
     gl.push_model_matrix(mq::Mat4::from_scale_rotation_translation(
         scale,
@@ -183,7 +189,7 @@ impl Render for Tile {
                     TileCell::Warp(pawn) => render_warp(render, x, y, pawn),
                     TileCell::Loot(pawn) => render_loot(render, x, y, pawn),
                     TileCell::FinalExit(pawn) => {
-                        render_final_exit(render, x, y, pawn, col_idx, row_idx)
+                        render_final_exit(render, x, y, pawn, self, col_idx, row_idx)
                     }
 
                     //TileCell::Camera(_) => todo!(),

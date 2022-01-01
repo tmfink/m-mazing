@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
-use crate::Pawn;
+use crate::prelude::*;
+use crate::*;
 
 pub mod tileset;
 
@@ -116,6 +117,36 @@ impl Default for WallState {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Direction {
+    Right,
+    Up,
+    Left,
+    Down,
+}
+
+impl Direction {
+    /// What to add to point to get neighbor
+    pub fn neighbor_transform(self) -> (i8, i8) {
+        match self {
+            Self::Right => (1, 0),
+            Self::Up => (0, -1),
+            Self::Left => (-1, 0),
+            Self::Down => (0, 1),
+        }
+    }
+
+    /// Direction converted to angle (in radians)
+    pub fn as_angle(self) -> f32 {
+        match self {
+            Self::Right => 0.,
+            Self::Up => std::f32::consts::FRAC_PI_2,
+            Self::Left => std::f32::consts::PI,
+            Self::Down => 1.5 * std::f32::consts::PI,
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Tile {
     pub cells: [[TileCell; Self::CELL_GRID_WIDTH as usize]; Self::CELL_GRID_WIDTH as usize],
@@ -130,6 +161,73 @@ pub struct Tile {
 impl Tile {
     pub const CELL_GRID_WIDTH: u8 = 4;
     const MAX_ESCALATORS_PER_TILE: u8 = 4;
+
+    /// Directions pointing to edge of tile
+    ///
+    /// Internal tiles will have no directions
+    pub fn outer_edge_directions(&self, cell_point: TilePoint) -> Vec<Direction> {
+        const MAX_IDX: u8 = Tile::CELL_GRID_WIDTH - 1;
+
+        let mut dirs = Vec::with_capacity(4);
+        if cell_point.x == 0 {
+            dirs.push(Direction::Left);
+        }
+        if cell_point.x == MAX_IDX {
+            dirs.push(Direction::Right);
+        }
+        if cell_point.y == 0 {
+            dirs.push(Direction::Up);
+        }
+        if cell_point.y == MAX_IDX {
+            dirs.push(Direction::Down);
+        }
+        dirs
+    }
+
+    pub fn cell_value(&self, point: TilePoint) -> TileCell {
+        self.cells[point.y as usize][point.x as usize]
+    }
+
+    pub fn neighbor_point(&self, cell_point: TilePoint, direction: Direction) -> Option<TilePoint> {
+        cell_point.added(direction.neighbor_transform())
+    }
+
+    pub fn neighbor_cell(&self, cell_point: TilePoint, direction: Direction) -> Option<TileCell> {
+        let neighbor_point = self.neighbor_point(cell_point, direction)?;
+        Some(self.cell_value(neighbor_point))
+    }
+
+    pub fn cell_wall(&self, cell_point: TilePoint, direction: Direction) -> WallState {
+        let x = cell_point.x as usize;
+        let y = cell_point.y as usize;
+        match direction {
+            Direction::Up => self.horz_walls[y][x],
+            Direction::Down => self.horz_walls[y + 1][x],
+            Direction::Left => self.vert_walls[y][x],
+            Direction::Right => self.vert_walls[y][x + 1],
+        }
+    }
+
+    pub fn cell_exit_direction(&self, cell_point: TilePoint) -> Direction {
+        let open_exit_dirs: Vec<Direction> = self
+            .outer_edge_directions(cell_point)
+            .iter()
+            .copied()
+            .filter(|dir| self.cell_wall(cell_point, *dir) == WallState::Open)
+            .collect();
+
+        let dir = match open_exit_dirs.as_slice() {
+            [dir1] => *dir1,
+            _ => {
+                warn!(
+                    "Unable to find a good direction for exit direction at {:?}",
+                    cell_point
+                );
+                Direction::Right
+            }
+        };
+        dir
+    }
 }
 
 impl FromStr for Tile {
@@ -158,6 +256,12 @@ impl TilePoint {
         } else {
             None
         }
+    }
+
+    pub fn added(self, add: (i8, i8)) -> Option<Self> {
+        let new_x = (self.x as i8 + add.0).try_into().ok()?;
+        let new_y = (self.y as i8 + add.1).try_into().ok()?;
+        TilePoint::new(new_x, new_y)
     }
 }
 

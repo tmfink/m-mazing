@@ -1,10 +1,4 @@
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Direction {
-    North,
-    South,
-    East,
-    West,
-}
+use crate::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BoardAction {

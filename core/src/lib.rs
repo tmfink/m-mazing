@@ -4,6 +4,7 @@ pub mod tile;
 
 pub mod prelude {
     pub use crate::action::*;
+    pub use crate::logging::*;
     pub use crate::role::*;
     pub use crate::tile::{tileset::*, *};
     pub use crate::*;
@@ -21,9 +22,9 @@ cfg_if! {
 
 cfg_if! {
     if #[cfg(any(not(feature = "gui"), feature = "logs-rs"))] {
-        pub use log;
+        pub use log as logging;
     } else {
-        use macroquad::logging::*;
+        pub use macroquad::logging;
     }
 }
 
