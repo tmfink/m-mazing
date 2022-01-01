@@ -5,6 +5,8 @@
 - [ ] Controls
     - [ ] keyboard
     - [ ] mouse
+        - pawn movement: click pawn and drag to destination
+    - [ ] touch
 - [ ] UI
     - [ ] timer
     - [ ] display available actions?

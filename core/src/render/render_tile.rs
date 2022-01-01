@@ -65,16 +65,63 @@ fn render_loot(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
     );
 }
 
-fn render_final_exit(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
+fn render_final_exit(
+    render: &RenderState,
+    x: f32,
+    y: f32,
+    pawn: Pawn,
+    _col_idx: usize,
+    _row_idx: usize,
+) {
+    let gl = unsafe { mq::get_internal_gl().quad_gl };
+
+    let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
+    // todo: get optimal display angle based on tiles
+    let angle = 0.0;
+    let rotation = mq::Quat::from_rotation_z(angle);
+    let translation = mq::Vec3::new(x + 0.5, y + 0.5, 0.);
+    gl.push_model_matrix(mq::Mat4::from_scale_rotation_translation(
+        scale,
+        rotation,
+        translation,
+    ));
+
     let offset = 0.5 * render.theme.wall_thickness;
+    let end = 1.0 - 2.0 * offset;
     mq::draw_rectangle(
-        x + offset,
-        y + offset,
-        CELL_WIDTH - 2.0 * offset,
-        CELL_WIDTH - 2.0 * offset,
+        -0.5 + offset,
+        -0.5 + offset,
+        end,
+        end,
         pawn.as_color(render),
     );
-    // todo: add arrow pointing outward
+
+    let color = render.theme.final_exit_arrow_color;
+    let thickness = render.theme.warp_thickness;
+    let endpoint = 0.5 - 2.0 * offset;
+    let arrowhead_width = 0.2;
+    let arrowhead_halfwidth = 0.5 * arrowhead_width;
+    let arrowhead_length = 0.25;
+    let arrowhead_back_x = endpoint - arrowhead_length;
+    mq::draw_line(0.0, 0.0, endpoint, 0.0, thickness, color);
+    mq::draw_line(
+        endpoint,
+        0.0,
+        arrowhead_back_x,
+        -arrowhead_halfwidth,
+        thickness,
+        color,
+    );
+    mq::draw_line(
+        endpoint,
+        0.0,
+        arrowhead_back_x,
+        arrowhead_halfwidth,
+        thickness,
+        color,
+    );
+
+    gl.pop_model_matrix();
 }
 
 impl Render for Tile {
@@ -125,17 +172,19 @@ impl Render for Tile {
 
         // todo: render cells
         for (row_idx, row) in self.cells.iter().enumerate() {
-            let row_idx = row_idx as f32;
-            let y = -GRID_HALF_WIDTH + row_idx * CELL_WIDTH;
+            let row_idx_float = row_idx as f32;
+            let y = -GRID_HALF_WIDTH + row_idx_float * CELL_WIDTH;
             for (col_idx, cell) in row.iter().copied().enumerate() {
-                let col_idx = col_idx as f32;
-                let x = -GRID_HALF_WIDTH + col_idx * CELL_WIDTH;
+                let col_idx_float = col_idx as f32;
+                let x = -GRID_HALF_WIDTH + col_idx_float * CELL_WIDTH;
 
                 match cell {
                     TileCell::TimerFlip(_) => render_timer(render, x, y),
                     TileCell::Warp(pawn) => render_warp(render, x, y, pawn),
                     TileCell::Loot(pawn) => render_loot(render, x, y, pawn),
-                    TileCell::FinalExit(pawn) => render_final_exit(render, x, y, pawn),
+                    TileCell::FinalExit(pawn) => {
+                        render_final_exit(render, x, y, pawn, col_idx, row_idx)
+                    }
 
                     //TileCell::Camera(_) => todo!(),
                     TileCell::Empty => (),
