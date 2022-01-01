@@ -21,6 +21,8 @@ pub struct Theme {
     pub crystal_ball_color: mq::Color,
     pub escalator_color: mq::Color,
     pub escalator_thickness: f32,
+    pub used_marker_thickness: f32,
+    pub used_marker_color: mq::Color,
 }
 
 impl Default for Theme {
@@ -55,6 +57,8 @@ impl Default for Theme {
                 a: 1.0,
             },
             escalator_thickness: 0.2,
+            used_marker_thickness: 0.18,
+            used_marker_color: mq::BLACK,
         }
     }
 }

@@ -27,6 +27,18 @@ fn render_timer(render: &RenderState, x: f32, y: f32) {
     );
 }
 
+fn render_used_marker(render: &RenderState, x: f32, y: f32) {
+    let x_left = x + 0.1;
+    let x_right = x + 0.9;
+    let y_top = y + 0.1;
+    let y_bottom = y + 0.9;
+
+    let thickness = render.theme.used_marker_thickness;
+    let color = render.theme.used_marker_color;
+    mq::draw_line(x_left, y_top, x_right, y_bottom, thickness, color);
+    mq::draw_line(x_left, y_bottom, x_right, y_top, thickness, color);
+}
+
 fn render_warp(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
     let center = mq::Vec2::new(x + CELL_HALF_WIDTH, y + CELL_HALF_WIDTH);
 
@@ -268,6 +280,10 @@ impl Render for Tile {
                     TileCell::Camera(_) => render_camera(render, gl, x, y),
                     TileCell::CrystalBall(_) => render_crystal_ball(render, gl, x, y),
                     TileCell::Empty => (),
+                }
+
+                if cell.is_used() {
+                    render_used_marker(render, x, y);
                 }
             }
         }

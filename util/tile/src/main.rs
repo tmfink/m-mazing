@@ -85,7 +85,7 @@ fn main() -> Result<()> {
 #[cfg(feature = "gui")]
 #[macroquad::main("M-Mazing Tile Util")]
 async fn main() -> Result<()> {
-    let ctx = get_ctx().with_context(|| "Failed to generate context")?;
+    let mut ctx = get_ctx().with_context(|| "Failed to generate context")?;
     let render = RenderState::default();
 
     #[cfg(feature = "log-rs")]
@@ -93,6 +93,7 @@ async fn main() -> Result<()> {
 
     info!("tileset: {:#?}", ctx.tileset);
     let mut tile_idx: isize = 0;
+    let mut availability = CellItemAvailability::Available;
 
     loop {
         mq::clear_background(render.theme.bg_color);
@@ -103,11 +104,19 @@ async fn main() -> Result<()> {
 
         if mq::is_key_pressed(mq::KeyCode::Right) || mq::is_key_pressed(mq::KeyCode::Down) {
             tile_idx += 1;
-        } else if mq::is_key_pressed(mq::KeyCode::Left) || mq::is_key_pressed(mq::KeyCode::Up) {
+        }
+        if mq::is_key_pressed(mq::KeyCode::Left) || mq::is_key_pressed(mq::KeyCode::Up) {
             tile_idx -= 1;
         }
         tile_idx %= ctx.tileset.len() as isize;
-        let tile = ctx.tileset.get(tile_idx as usize);
+        let tile = ctx.tileset.get_mut(tile_idx as usize);
+
+        if mq::is_key_pressed(mq::KeyCode::K) || mq::is_key_pressed(mq::KeyCode::U) {
+            availability = match availability {
+                CellItemAvailability::Available => CellItemAvailability::Used,
+                CellItemAvailability::Used => CellItemAvailability::Available,
+            };
+        }
 
         // todo: smarter fit rect for all tiles
         let fit_rect = mq::Rect {
@@ -120,8 +129,14 @@ async fn main() -> Result<()> {
         mq::set_camera(&whole_camera);
 
         let text = if let Some((tile_name, tile)) = tile {
+            for cell in tile.cells_mut() {
+                cell.set_availability(availability);
+            }
             tile.render(mq::Vec2::default(), &render);
-            format!("TILE: {} (idx={})", tile_name, tile_idx)
+            format!(
+                "TILE: {} (idx={}, avail={:?})",
+                tile_name, tile_idx, availability
+            )
         } else {
             "no tile".to_string()
         };

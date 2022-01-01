@@ -52,12 +52,12 @@ impl TileCell {
         matches!(self, TimerFlip(Used) | Camera(Used) | CrystalBall(Used))
     }
 
-    pub fn mark_as_used(&mut self) {
+    pub fn set_availability(&mut self, new_used: CellItemAvailability) {
         use TileCell::*;
 
         match self {
             TimerFlip(avail) | Camera(avail) | CrystalBall(avail) => {
-                *avail = CellItemAvailability::Used;
+                *avail = new_used;
             }
             _ => {}
         }
@@ -242,6 +242,14 @@ impl Tile {
             }
         };
         dir
+    }
+
+    pub fn cells(&self) -> impl Iterator<Item = &TileCell> {
+        self.cells.iter().flat_map(|row| row.iter())
+    }
+
+    pub fn cells_mut(&mut self) -> impl Iterator<Item = &mut TileCell> {
+        self.cells.iter_mut().flat_map(|row| row.iter_mut())
     }
 }
 
