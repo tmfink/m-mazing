@@ -49,7 +49,18 @@ impl TileCell {
         use CellItemAvailability::*;
         use TileCell::*;
 
-        matches!(self, TimerFlip(Used) | Camera(Used))
+        matches!(self, TimerFlip(Used) | Camera(Used) | CrystalBall(Used))
+    }
+
+    pub fn mark_as_used(&mut self) {
+        use TileCell::*;
+
+        match self {
+            TimerFlip(avail) | Camera(avail) | CrystalBall(avail) => {
+                *avail = CellItemAvailability::Used;
+            }
+            _ => {}
+        }
     }
 }
 

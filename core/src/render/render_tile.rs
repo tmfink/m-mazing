@@ -65,9 +65,7 @@ fn render_loot(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
     );
 }
 
-fn render_camera(render: &RenderState, x: f32, y: f32) {
-    let gl = unsafe { mq::get_internal_gl().quad_gl };
-
+fn render_camera(render: &RenderState, gl: &mut mq::QuadGl, x: f32, y: f32) {
     let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
     let translation = mq::Vec3::new(x + 0.5, y + 0.5, 0.);
     let rotation = mq::Quat::IDENTITY;
@@ -100,9 +98,7 @@ fn render_camera(render: &RenderState, x: f32, y: f32) {
     gl.pop_model_matrix();
 }
 
-fn render_crystal_ball(render: &RenderState, x: f32, y: f32) {
-    let gl = unsafe { mq::get_internal_gl().quad_gl };
-
+fn render_crystal_ball(render: &RenderState, gl: &mut mq::QuadGl, x: f32, y: f32) {
     let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
     let translation = mq::Vec3::new(x + 0.5, y + 0.5, 0.);
     let rotation = mq::Quat::IDENTITY;
@@ -121,18 +117,21 @@ fn render_crystal_ball(render: &RenderState, x: f32, y: f32) {
 
 fn render_escalator(render: &RenderState, escalator: EscalatorLocation) {
     let [a, b] = escalator.0;
+    let offset = CELL_HALF_WIDTH - GRID_HALF_WIDTH;
     mq::draw_line(
-        a.x() as f32 + 0.5,
-        a.y() as f32 + 0.5,
-        b.x() as f32 + 0.5,
-        b.y() as f32 + 0.5,
+        a.x() as f32 + offset,
+        a.y() as f32 + offset,
+        b.x() as f32 + offset,
+        b.y() as f32 + offset,
         render.theme.escalator_thickness,
         render.theme.escalator_color,
     );
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_final_exit(
     render: &RenderState,
+    gl: &mut mq::QuadGl,
     x: f32,
     y: f32,
     pawn: Pawn,
@@ -140,8 +139,6 @@ fn render_final_exit(
     col_idx: usize,
     row_idx: usize,
 ) {
-    let gl = unsafe { mq::get_internal_gl().quad_gl };
-
     let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
 
     let point = TilePoint::new(col_idx as u8, row_idx as u8)
@@ -198,9 +195,20 @@ fn render_final_exit(
 
 impl Render for Tile {
     fn render(&self, pos: mq::Vec2, render: &RenderState) {
+        let gl = unsafe { mq::get_internal_gl().quad_gl };
+
+        let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
+        let translation = mq::Vec3::new(pos.x, pos.y, 0.);
+        let rotation = mq::Quat::IDENTITY;
+        gl.push_model_matrix(mq::Mat4::from_scale_rotation_translation(
+            scale,
+            rotation,
+            translation,
+        ));
+
         mq::draw_rectangle(
-            pos.x + -GRID_HALF_WIDTH,
-            pos.y + -GRID_HALF_WIDTH,
+            -GRID_HALF_WIDTH,
+            -GRID_HALF_WIDTH,
             GRID_WIDTH,
             GRID_WIDTH,
             render.theme.tile_bg_color,
@@ -255,24 +263,14 @@ impl Render for Tile {
                     TileCell::Warp(pawn) => render_warp(render, x, y, pawn),
                     TileCell::Loot(pawn) => render_loot(render, x, y, pawn),
                     TileCell::FinalExit(pawn) => {
-                        render_final_exit(render, x, y, pawn, self, col_idx, row_idx)
+                        render_final_exit(render, gl, x, y, pawn, self, col_idx, row_idx)
                     }
-                    TileCell::Camera(_) => render_camera(render, x, y),
-                    TileCell::CrystalBall(_) => render_crystal_ball(render, x, y),
+                    TileCell::Camera(_) => render_camera(render, gl, x, y),
+                    TileCell::CrystalBall(_) => render_crystal_ball(render, gl, x, y),
                     TileCell::Empty => (),
                 }
             }
         }
-
-        let gl = unsafe { mq::get_internal_gl().quad_gl };
-        let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
-        let translation = mq::Vec3::new(-2.0, -2.0, 0.);
-        let rotation = mq::Quat::IDENTITY;
-        gl.push_model_matrix(mq::Mat4::from_scale_rotation_translation(
-            scale,
-            rotation,
-            translation,
-        ));
 
         for escalator in &self.escalators {
             render_escalator(render, *escalator);
