@@ -18,6 +18,7 @@ pub struct Theme {
     pub timer_color: mq::Color,
     pub final_exit_arrow_color: mq::Color,
     pub camera_color: mq::Color,
+    pub crystal_ball_color: mq::Color,
 }
 
 impl Default for Theme {
@@ -44,6 +45,7 @@ impl Default for Theme {
             timer_color: mq::RED,
             final_exit_arrow_color: mq::GRAY,
             camera_color: mq::BLACK,
+            crystal_ball_color: mq::PURPLE,
         }
     }
 }

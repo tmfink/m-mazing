@@ -100,6 +100,25 @@ fn render_camera(render: &RenderState, x: f32, y: f32) {
     gl.pop_model_matrix();
 }
 
+fn render_crystal_ball(render: &RenderState, x: f32, y: f32) {
+    let gl = unsafe { mq::get_internal_gl().quad_gl };
+
+    let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
+    let translation = mq::Vec3::new(x + 0.5, y + 0.5, 0.);
+    let rotation = mq::Quat::IDENTITY;
+    gl.push_model_matrix(mq::Mat4::from_scale_rotation_translation(
+        scale,
+        rotation,
+        translation,
+    ));
+
+    let color = render.theme.crystal_ball_color;
+    mq::draw_hexagon(0.0, 0.0, 0.4, 0.05, false, color, mq::WHITE);
+    mq::draw_circle_lines(0.0, 0.0, 0.3, 0.05, color);
+
+    gl.pop_model_matrix();
+}
+
 fn render_final_exit(
     render: &RenderState,
     x: f32,
@@ -227,8 +246,8 @@ impl Render for Tile {
                         render_final_exit(render, x, y, pawn, self, col_idx, row_idx)
                     }
                     TileCell::Camera(_) => render_camera(render, x, y),
+                    TileCell::CrystalBall(_) => render_crystal_ball(render, x, y),
                     TileCell::Empty => (),
-                    _ => (),
                 }
             }
         }
