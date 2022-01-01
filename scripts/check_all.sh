@@ -1,13 +1,13 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -eux
 
-cargo check
-cargo check --no-default-features
-cargo check --all-features
-
 cargo fmt -- --check
+check_args=("" "--no-default-features" "--all-features")
 
-cargo clippy -- -D warnings
+for args in "${check_args[@]}"; do
+    cargo check ${args}
+    cargo clippy ${args} -- -D warnings
+done
 
 echo PASS
