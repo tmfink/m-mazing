@@ -108,7 +108,7 @@ async fn main() -> Result<()> {
     loop {
         mq::clear_background(render.theme.bg_color);
 
-        match update(&mut ctx, &render) {
+        match update(&mut ctx) {
             Continuation::Continue => (),
             Continuation::Exit => break,
         }

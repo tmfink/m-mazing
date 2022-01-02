@@ -258,8 +258,35 @@ impl Tile {
         self.cells.iter_mut().flat_map(|row| row.iter_mut())
     }
 
-    pub fn rotate(&mut self, _rotate: SpinDirection) {
-        todo!("spin")
+    pub fn rotate(&mut self, spin: SpinDirection) {
+        let mut new_tile = Self {
+            escalators: self.escalators.clone(),
+            ..Self::default()
+        };
+        rotate_2d_array(&self.cells, &mut new_tile.cells, spin);
+        rotate_2d_array(&self.horz_walls, &mut new_tile.vert_walls, spin);
+        rotate_2d_array(&self.vert_walls, &mut new_tile.horz_walls, spin);
+
+        for new_esc in new_tile.escalators.iter_mut() {
+            new_esc.rotate(spin);
+        }
+        *self = new_tile;
+    }
+}
+
+pub fn rotate_2d_array<T: Copy, const WIDTH: usize, const HEIGHT: usize>(
+    arr: &[[T; WIDTH]; HEIGHT],
+    out: &mut [[T; HEIGHT]; WIDTH],
+    spin: SpinDirection,
+) {
+    for (row_idx, row) in arr.iter().enumerate() {
+        for (col_idx, cell) in row.iter().copied().enumerate() {
+            let (a, b) = match spin {
+                SpinDirection::Clockwise => (col_idx, HEIGHT - 1 - row_idx),
+                SpinDirection::CounterClockwise => (WIDTH - 1 - col_idx, row_idx),
+            };
+            out[a][b] = cell;
+        }
     }
 }
 
@@ -304,7 +331,211 @@ impl TilePoint {
     pub fn y(self) -> u8 {
         self.y
     }
+
+    pub fn rotate(&mut self, spin: SpinDirection) {
+        *self = self.as_rotated(spin);
+    }
+
+    pub fn as_rotated(self, spin: SpinDirection) -> Self {
+        match spin {
+            SpinDirection::Clockwise => Self {
+                x: Tile::CELL_GRID_WIDTH - 1 - self.y,
+                y: self.x,
+            },
+            SpinDirection::CounterClockwise => Self {
+                x: self.y,
+                y: Tile::CELL_GRID_WIDTH - 1 - self.x,
+            },
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EscalatorLocation(pub [TilePoint; 2]);
+
+impl EscalatorLocation {
+    pub fn rotate(&mut self, spin: SpinDirection) {
+        for point in self.0.iter_mut() {
+            point.rotate(spin);
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use CellItemAvailability::*;
+    use Pawn::*;
+    use TileCell::*;
+    use WallState::*;
+
+    #[test]
+    fn rotate() {
+        let tile = Tile {
+            cells: [
+                [
+                    Loot(Yellow),
+                    Camera(Available),
+                    FinalExit(Purple),
+                    Loot(Purple),
+                ],
+                [FinalExit(Yellow), Warp(Green), Warp(Orange), Loot(Green)],
+                [
+                    TimerFlip(Available),
+                    Warp(Yellow),
+                    Warp(Purple),
+                    FinalExit(Green),
+                ],
+                [
+                    Loot(Orange),
+                    FinalExit(Orange),
+                    CrystalBall(Available),
+                    Empty,
+                ],
+            ],
+            horz_walls: [
+                [Blocked, Blocked, Open, Blocked],
+                [Blocked, Open, Open, Blocked],
+                [Blocked, Open, Open, Blocked],
+                [Blocked, Open, Open, Blocked],
+                [Blocked, Open, Blocked, Blocked],
+            ],
+            vert_walls: [
+                [Blocked, Open, Open, Open, Blocked],
+                [Open, Open, Open, Open, Blocked],
+                [Blocked, Open, Open, Blocked, Open],
+                [Blocked, Open, Open, Blocked, Blocked],
+            ],
+            escalators: [EscalatorLocation([
+                TilePoint { x: 2, y: 3 },
+                TilePoint { x: 3, y: 2 },
+            ])]
+            .iter()
+            .copied()
+            .collect(),
+        };
+
+        let tile_counterclockwise = Tile {
+            cells: [
+                [Loot(Purple), Loot(Green), FinalExit(Green), Empty],
+                [
+                    FinalExit(Purple),
+                    Warp(Orange),
+                    Warp(Purple),
+                    CrystalBall(Available),
+                ],
+                [
+                    Camera(Available),
+                    Warp(Green),
+                    Warp(Yellow),
+                    FinalExit(Orange),
+                ],
+                [
+                    Loot(Yellow),
+                    FinalExit(Yellow),
+                    TimerFlip(Available),
+                    Loot(Orange),
+                ],
+            ],
+            horz_walls: [
+                [Blocked, Blocked, Open, Blocked],
+                [Open, Open, Blocked, Blocked],
+                [Open, Open, Open, Open],
+                [Open, Open, Open, Open],
+                [Blocked, Open, Blocked, Blocked],
+            ],
+            vert_walls: [
+                [Blocked, Blocked, Blocked, Blocked, Blocked],
+                [Open, Open, Open, Open, Blocked],
+                [Blocked, Open, Open, Open, Open],
+                [Blocked, Blocked, Blocked, Blocked, Blocked],
+            ],
+            escalators: [EscalatorLocation([
+                TilePoint { x: 3, y: 1 },
+                TilePoint { x: 2, y: 0 },
+            ])]
+            .iter()
+            .copied()
+            .collect(),
+        };
+
+        let tile_clockwise = Tile {
+            cells: [
+                [
+                    Loot(Orange),
+                    TimerFlip(Available),
+                    FinalExit(Yellow),
+                    Loot(Yellow),
+                ],
+                [
+                    FinalExit(Orange),
+                    Warp(Yellow),
+                    Warp(Green),
+                    Camera(Available),
+                ],
+                [
+                    CrystalBall(Available),
+                    Warp(Purple),
+                    Warp(Orange),
+                    FinalExit(Purple),
+                ],
+                [Empty, FinalExit(Green), Loot(Green), Loot(Purple)],
+            ],
+            horz_walls: [
+                [Blocked, Blocked, Open, Blocked],
+                [Open, Open, Open, Open],
+                [Open, Open, Open, Open],
+                [Blocked, Blocked, Open, Open],
+                [Blocked, Open, Blocked, Blocked],
+            ],
+            vert_walls: [
+                [Blocked, Blocked, Blocked, Blocked, Blocked],
+                [Open, Open, Open, Open, Blocked],
+                [Blocked, Open, Open, Open, Open],
+                [Blocked, Blocked, Blocked, Blocked, Blocked],
+            ],
+            escalators: [EscalatorLocation([
+                TilePoint { x: 0, y: 2 },
+                TilePoint { x: 1, y: 3 },
+            ])]
+            .iter()
+            .copied()
+            .collect(),
+        };
+
+        {
+            let mut actual_counterclockwise = tile.clone();
+            actual_counterclockwise.rotate(SpinDirection::CounterClockwise);
+            assert_eq!(actual_counterclockwise, tile_counterclockwise);
+        }
+
+        {
+            let mut actual_clockwise = tile.clone();
+            actual_clockwise.rotate(SpinDirection::Clockwise);
+            assert_eq!(actual_clockwise, tile_clockwise);
+        }
+
+        {
+            let mut revert1 = tile.clone();
+            revert1.rotate(SpinDirection::Clockwise);
+            revert1.rotate(SpinDirection::CounterClockwise);
+            assert_eq!(revert1, tile);
+
+            revert1.rotate(SpinDirection::CounterClockwise);
+            revert1.rotate(SpinDirection::Clockwise);
+            assert_eq!(revert1, tile);
+
+            revert1.rotate(SpinDirection::CounterClockwise);
+            revert1.rotate(SpinDirection::CounterClockwise);
+            revert1.rotate(SpinDirection::CounterClockwise);
+            revert1.rotate(SpinDirection::CounterClockwise);
+            assert_eq!(revert1, tile);
+
+            revert1.rotate(SpinDirection::Clockwise);
+            revert1.rotate(SpinDirection::Clockwise);
+            revert1.rotate(SpinDirection::Clockwise);
+            revert1.rotate(SpinDirection::Clockwise);
+            assert_eq!(revert1, tile);
+        }
+    }
+}

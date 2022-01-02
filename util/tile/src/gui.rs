@@ -1,8 +1,10 @@
 use crate::*;
 
 const LEGEND: &str = "
-Arrow keys - cycle between tiles;
-K/U - toggle cell availability
+Arrow keys - cycle;
+K/U - toggle cell used;
+[] - rotate
+P - print tile
 ";
 
 pub enum Continuation {
@@ -11,7 +13,7 @@ pub enum Continuation {
 }
 
 #[must_use]
-pub fn update(ctx: &mut Ctx, render: &RenderState) -> Continuation {
+pub fn update(ctx: &mut Ctx) -> Continuation {
     if mq::is_key_pressed(mq::KeyCode::Q) || mq::is_key_pressed(mq::KeyCode::Escape) {
         return Continuation::Exit;
     }
@@ -32,10 +34,6 @@ pub fn update(ctx: &mut Ctx, render: &RenderState) -> Continuation {
         };
     }
 
-    if mq::is_key_pressed(mq::KeyCode::LeftBracket) {
-        //tile.rotate();
-    }
-
     // todo: smarter fit rect for all tiles
     let fit_rect = mq::Rect {
         x: -3.,
@@ -46,23 +44,35 @@ pub fn update(ctx: &mut Ctx, render: &RenderState) -> Continuation {
     let whole_camera = camera_zoom_to_fit(fit_rect);
     mq::set_camera(&whole_camera);
 
-    ctx.text = if let Some((tile_name, tile)) = tile {
+    if let Some((tile_name, tile)) = tile {
         for cell in tile.cells_mut() {
             cell.set_availability(ctx.availability);
         }
-        tile.render(mq::Vec2::default(), render);
-        format!(
+        if mq::is_key_pressed(mq::KeyCode::LeftBracket) {
+            tile.rotate(SpinDirection::CounterClockwise);
+        }
+        if mq::is_key_pressed(mq::KeyCode::RightBracket) {
+            tile.rotate(SpinDirection::Clockwise);
+        }
+        ctx.text = format!(
             "TILE: {} (idx={}, avail={:?})",
             tile_name, ctx.tile_idx, ctx.availability
-        )
+        );
     } else {
-        "no tile".to_string()
-    };
+        ctx.text = "no tile".to_string();
+    }
+
+    if mq::is_key_pressed(mq::KeyCode::P) {
+        println!("{:#?}", tile);
+    }
 
     Continuation::Continue
 }
 
 pub fn draw(ctx: &Ctx, render: &RenderState) {
+    if let Some((_tile_name, tile)) = ctx.tileset.get(ctx.tile_idx as usize) {
+        tile.render(mq::Vec2::default(), render);
+    }
     // screen space camera for text
     mq::set_default_camera();
     let (font_size, font_scale, font_scale_aspect) = mq::camera_font_scale(render.theme.font_size);
