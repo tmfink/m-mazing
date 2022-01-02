@@ -205,8 +205,8 @@ fn render_final_exit(
     gl.pop_model_matrix();
 }
 
-impl Render for Tile {
-    fn render(&self, pos: mq::Vec2, render: &RenderState) {
+impl Tile {
+    pub fn render(&self, pos: mq::Vec2, render: &RenderState) {
         let gl = unsafe { mq::get_internal_gl().quad_gl };
 
         let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);

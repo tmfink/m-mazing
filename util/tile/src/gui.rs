@@ -5,6 +5,7 @@ Arrow keys - cycle;
 K/U - toggle cell used;
 [] - rotate
 P - print tile
+R - reload tileset
 ";
 
 pub enum Continuation {
@@ -18,13 +19,23 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
         return Continuation::Exit;
     }
 
+    if mq::is_key_pressed(mq::KeyCode::R) {
+        match ctx.refresh() {
+            Ok(()) => info!("Refreshed ctx"),
+            Err(err) => error!("Failed to refresh: {}", err),
+        }
+    }
+
     if mq::is_key_pressed(mq::KeyCode::Right) || mq::is_key_pressed(mq::KeyCode::Down) {
         ctx.tile_idx += 1;
     }
     if mq::is_key_pressed(mq::KeyCode::Left) || mq::is_key_pressed(mq::KeyCode::Up) {
         ctx.tile_idx -= 1;
     }
-    ctx.tile_idx = ctx.tile_idx.rem_euclid(ctx.tileset.len() as isize);
+    ctx.tile_idx = ctx
+        .tile_idx
+        .checked_rem_euclid(ctx.tileset.len() as isize)
+        .unwrap_or(0);
     let tile = ctx.tileset.get_mut(ctx.tile_idx as usize);
 
     if mq::is_key_pressed(mq::KeyCode::K) || mq::is_key_pressed(mq::KeyCode::U) {

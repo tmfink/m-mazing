@@ -17,7 +17,7 @@ cfg_if! {
 }
 
 /// Utility to debug Tiles
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[clap(about, version, author)]
 pub struct Args {
     /// Log verbosity
@@ -51,6 +51,7 @@ fn init_logging(args: &Args) {
 }
 
 #[allow(dead_code)]
+#[derive(Clone, Debug)]
 pub struct Ctx {
     pub args: Args,
     pub tileset: Vec<(String, Tile)>,
@@ -59,31 +60,39 @@ pub struct Ctx {
     pub text: String,
 }
 
-fn get_ctx() -> Result<Ctx> {
-    let mut args = Args::parse();
-    args.verbose.set_default(Some(log::Level::Info));
+impl Ctx {
+    fn new() -> Result<Ctx> {
+        let mut args = Args::parse();
+        args.verbose.set_default(Some(log::Level::Info));
 
-    let mut tile_input_file = File::open(&args.tile_file)
-        .with_context(|| format!("Failed to open input file {:?}", &args.tile_file))?;
-    let mut tile_str = String::new();
-    tile_input_file
-        .read_to_string(&mut tile_str)
-        .with_context(|| "Failed to read input")?;
-    let tileset = m_mazing_core::tile::tileset::tileset_from_str(&tile_str)
-        .with_context(|| "failed to parse tileset")?;
+        let mut ctx = Ctx {
+            args,
+            tileset: Default::default(),
+            tile_idx: 0,
+            availability: CellItemAvailability::Available,
+            text: String::new(),
+        };
+        ctx.refresh()?;
+        Ok(ctx)
+    }
 
-    Ok(Ctx {
-        args,
-        tileset,
-        tile_idx: 0,
-        availability: CellItemAvailability::Available,
-        text: String::new(),
-    })
+    fn refresh(&mut self) -> Result<()> {
+        let mut tile_input_file = File::open(&self.args.tile_file)
+            .with_context(|| format!("Failed to open input file {:?}", &self.args.tile_file))?;
+        let mut tile_str = String::new();
+        tile_input_file
+            .read_to_string(&mut tile_str)
+            .with_context(|| "Failed to read input")?;
+        self.tileset = m_mazing_core::tile::tileset::tileset_from_str(&tile_str)
+            .with_context(|| "failed to parse tileset")?;
+
+        Ok(())
+    }
 }
 
 #[cfg(not(feature = "gui"))]
 fn main() -> Result<()> {
-    let ctx = get_ctx().with_context(|| "Failed to generate context")?;
+    let ctx = Ctx::new().with_context(|| "Failed to generate context")?;
 
     #[cfg(any(not(feature = "gui"), feature = "logs-rs"))]
     init_logging(&ctx.args);
@@ -97,7 +106,7 @@ fn main() -> Result<()> {
 #[cfg(feature = "gui")]
 #[macroquad::main("M-Mazing Tile Util")]
 async fn main() -> Result<()> {
-    let mut ctx = get_ctx().with_context(|| "Failed to generate context")?;
+    let mut ctx = Ctx::new().with_context(|| "Failed to generate context")?;
     let render = RenderState::default();
 
     #[cfg(feature = "log-rs")]
