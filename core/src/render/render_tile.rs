@@ -207,6 +207,8 @@ fn render_final_exit(
 
 impl Tile {
     pub fn render(&self, pos: mq::Vec2, render: &RenderState) {
+        // SAFETY: must never call in child frame
+        // Otherwise, there would be multiple mutable references to same data
         let gl = unsafe { mq::get_internal_gl().quad_gl };
 
         let is_reachable_coord = self.reachable_coords();
@@ -228,41 +230,51 @@ impl Tile {
             render.theme.tile_bg_color,
         );
 
-        // horizontal walls
-        for (row_idx, row) in self.horz_walls().iter().enumerate() {
-            let row_idx = row_idx as f32;
-            let y = -GRID_HALF_WIDTH + row_idx * CELL_WIDTH;
-            for (col_idx, wall) in row.iter().copied().enumerate() {
-                let col_idx = col_idx as f32;
-                let x = -GRID_HALF_WIDTH + col_idx * CELL_WIDTH;
-                mq::draw_line(
-                    x,
-                    y,
-                    x + CELL_WIDTH,
-                    y,
-                    render.theme.wall_thickness,
-                    wall.wall_color(render),
-                );
+        let render_walls = |pred: fn(WallState) -> bool| {
+            // horizontal walls
+            for (row_idx, row) in self.horz_walls().iter().enumerate() {
+                let row_idx = row_idx as f32;
+                let y = -GRID_HALF_WIDTH + row_idx * CELL_WIDTH;
+                for (col_idx, wall) in row.iter().copied().enumerate() {
+                    let col_idx = col_idx as f32;
+                    let x = -GRID_HALF_WIDTH + col_idx * CELL_WIDTH;
+                    if pred(wall) {
+                        mq::draw_line(
+                            x,
+                            y,
+                            x + CELL_WIDTH,
+                            y,
+                            render.theme.wall_thickness,
+                            wall.wall_color(render),
+                        );
+                    }
+                }
             }
-        }
 
-        // vertical walls
-        for (row_idx, row) in self.vert_walls().iter().enumerate() {
-            let row_idx = row_idx as f32;
-            let y = -GRID_HALF_WIDTH + row_idx * CELL_WIDTH;
-            for (col_idx, wall) in row.iter().copied().enumerate() {
-                let col_idx = col_idx as f32;
-                let x = -GRID_HALF_WIDTH + col_idx * CELL_WIDTH;
-                mq::draw_line(
-                    x,
-                    y,
-                    x,
-                    y + CELL_WIDTH,
-                    render.theme.wall_thickness,
-                    wall.wall_color(render),
-                );
+            // vertical walls
+            for (row_idx, row) in self.vert_walls().iter().enumerate() {
+                let row_idx = row_idx as f32;
+                let y = -GRID_HALF_WIDTH + row_idx * CELL_WIDTH;
+                for (col_idx, wall) in row.iter().copied().enumerate() {
+                    let col_idx = col_idx as f32;
+                    let x = -GRID_HALF_WIDTH + col_idx * CELL_WIDTH;
+                    if pred(wall) {
+                        mq::draw_line(
+                            x,
+                            y,
+                            x,
+                            y + CELL_WIDTH,
+                            render.theme.wall_thickness,
+                            wall.wall_color(render),
+                        );
+                    }
+                }
             }
-        }
+        };
+
+        // Render open walls before other walls
+        render_walls(|wall| wall == WallState::Open);
+        render_walls(|wall| wall != WallState::Open);
 
         // todo: render cells
         for (row_idx, row) in self.cell_grid().iter().enumerate() {
