@@ -23,6 +23,7 @@ pub struct Theme {
     pub escalator_thickness: f32,
     pub used_marker_thickness: f32,
     pub used_marker_color: mq::Color,
+    pub unreachable_cell_color: mq::Color,
 }
 
 impl Default for Theme {
@@ -59,6 +60,7 @@ impl Default for Theme {
             escalator_thickness: 0.2,
             used_marker_thickness: 0.18,
             used_marker_color: mq::BLACK,
+            unreachable_cell_color: mq::DARKGRAY,
         }
     }
 }

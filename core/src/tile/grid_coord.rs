@@ -4,7 +4,7 @@ use crate::prelude::*;
 ///
 /// - `x`: goes from left to right
 /// - `y`: goes from top to bottom
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TileGridCoord {
     pub(super) x: u8,
     pub(super) y: u8,

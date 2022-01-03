@@ -209,6 +209,8 @@ impl Tile {
     pub fn render(&self, pos: mq::Vec2, render: &RenderState) {
         let gl = unsafe { mq::get_internal_gl().quad_gl };
 
+        let is_reachable_coord = self.reachable_coords();
+
         let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
         let translation = mq::Vec3::new(pos.x, pos.y, 0.);
         let rotation = mq::Quat::IDENTITY;
@@ -269,6 +271,11 @@ impl Tile {
             for (col_idx, cell) in row.iter().copied().enumerate() {
                 let col_idx_float = col_idx as f32;
                 let x = -GRID_HALF_WIDTH + col_idx_float * CELL_WIDTH;
+
+                let is_reachable = is_reachable_coord[row_idx][col_idx];
+                if !is_reachable {
+                    mq::draw_rectangle(x, y, 1.0, 1.0, render.theme.unreachable_cell_color);
+                }
 
                 match cell {
                     TileCell::TimerFlip(_) => render_timer(render, x, y),

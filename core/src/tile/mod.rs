@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashSet, str::FromStr};
 
 use crate::prelude::*;
 
@@ -95,6 +95,54 @@ impl Tile {
         neighbors.dedup();
 
         neighbors
+    }
+
+    const POSSIBLE_ENTRANCE_COORDS: [TileGridCoord; 4] = [
+        TileGridCoord { x: 0, y: 1 },
+        TileGridCoord { x: 1, y: 3 },
+        TileGridCoord { x: 2, y: 0 },
+        TileGridCoord { x: 3, y: 2 },
+    ];
+
+    fn reachable_coords_starting(&self) -> Vec<TileGridCoord> {
+        Self::POSSIBLE_ENTRANCE_COORDS
+            .iter()
+            .copied()
+            .filter(|coord| {
+                let dir = match *self.cell_outer_edge_directions(*coord).as_slice() {
+                    [dir] => dir,
+                    _ => {
+                        panic!("there should only be one edge direction for possible entrance node")
+                    }
+                };
+                match self.cell_wall(*coord, dir) {
+                    WallState::Entrance | WallState::Explore(_) | WallState::Open => true,
+                    WallState::Blocked => false,
+                }
+            })
+            .collect()
+    }
+
+    pub fn reachable_coords(
+        &self,
+    ) -> [[bool; Tile::CELL_GRID_WIDTH as usize]; Tile::CELL_GRID_WIDTH as usize] {
+        let mut explore_coords = self.reachable_coords_starting();
+        let mut visited_coords = HashSet::new();
+        let mut is_reachable_coord: [[bool; Tile::CELL_GRID_WIDTH as usize];
+            Tile::CELL_GRID_WIDTH as usize] = Default::default();
+
+        while let Some(coord) = explore_coords.pop() {
+            visited_coords.insert(coord);
+            is_reachable_coord[coord.y as usize][coord.x as usize] = true;
+
+            for neighbor in self.cell_immediate_neighbor_coords(coord) {
+                if !(visited_coords.contains(&neighbor) || explore_coords.contains(&neighbor)) {
+                    explore_coords.push(neighbor);
+                }
+            }
+        }
+
+        is_reachable_coord
     }
 
     pub fn cell_wall(&self, coord: TileGridCoord, direction: Direction) -> WallState {
@@ -202,11 +250,71 @@ impl FromStr for Tile {
 
 #[cfg(test)]
 mod test {
+    use once_cell::sync::Lazy;
+
     use super::*;
     use CellItemAvailability::*;
     use Pawn::*;
     use TileCell::*;
     use WallState::*;
+
+    static TILE_1A: Lazy<Tile> = Lazy::new(|| Tile {
+        cell_grid: [
+            [TimerFlip(Available), Empty, Empty, Warp(Purple)],
+            [Empty, Empty, Empty, Warp(Yellow)],
+            [Warp(Orange), Empty, Empty, Empty],
+            [Warp(Green), Empty, Empty, Empty],
+        ],
+        horz_walls: [
+            [Blocked, Blocked, Explore(Orange), Blocked],
+            [Blocked, Open, Open, Blocked],
+            [Blocked, Open, Open, Blocked],
+            [Blocked, Open, Open, Blocked],
+            [Blocked, Explore(Yellow), Blocked, Blocked],
+        ],
+        vert_walls: [
+            [Blocked, Open, Open, Open, Blocked],
+            [Explore(Purple), Open, Open, Open, Blocked],
+            [Blocked, Open, Open, Blocked, Explore(Green)],
+            [Blocked, Open, Open, Blocked, Blocked],
+        ],
+        escalators: [EscalatorLocation([
+            TileGridCoord { x: 2, y: 3 },
+            TileGridCoord { x: 3, y: 2 },
+        ])]
+        .iter()
+        .copied()
+        .collect(),
+    });
+
+    static TILE_2: Lazy<Tile> = Lazy::new(|| Tile {
+        cell_grid: [
+            [FinalExit(Purple), Empty, Empty, Empty],
+            [Empty, Empty, Empty, Warp(Purple)],
+            [Empty, Empty, Empty, Empty],
+            [Empty, Empty, Empty, Warp(Green)],
+        ],
+        horz_walls: [
+            [Open, Blocked, Blocked, Blocked],
+            [Open, Open, Open, Blocked],
+            [Blocked, Open, Blocked, Open],
+            [Open, Blocked, Open, Blocked],
+            [Blocked, Explore(Orange), Blocked, Blocked],
+        ],
+        vert_walls: [
+            [Blocked, Blocked, Open, Open, Blocked],
+            [Blocked, Blocked, Open, Blocked, Blocked],
+            [Blocked, Blocked, Blocked, Open, Entrance],
+            [Blocked, Blocked, Open, Open, Blocked],
+        ],
+        escalators: [EscalatorLocation([
+            TileGridCoord { x: 0, y: 1 },
+            TileGridCoord { x: 1, y: 3 },
+        ])]
+        .iter()
+        .copied()
+        .collect(),
+    });
 
     #[test]
     fn rotate() {
@@ -380,41 +488,12 @@ mod test {
 
     #[test]
     fn neighbor() {
-        let tile_1a = Tile {
-            cell_grid: [
-                [TimerFlip(Available), Empty, Empty, Warp(Purple)],
-                [Empty, Empty, Empty, Warp(Yellow)],
-                [Warp(Orange), Empty, Empty, Empty],
-                [Warp(Green), Empty, Empty, Empty],
-            ],
-            horz_walls: [
-                [Blocked, Blocked, Explore(Orange), Blocked],
-                [Blocked, Open, Open, Blocked],
-                [Blocked, Open, Open, Blocked],
-                [Blocked, Open, Open, Blocked],
-                [Blocked, Explore(Yellow), Blocked, Blocked],
-            ],
-            vert_walls: [
-                [Blocked, Open, Open, Open, Blocked],
-                [Explore(Purple), Open, Open, Open, Blocked],
-                [Blocked, Open, Open, Blocked, Explore(Green)],
-                [Blocked, Open, Open, Blocked, Blocked],
-            ],
-            escalators: [EscalatorLocation([
-                TileGridCoord { x: 2, y: 3 },
-                TileGridCoord { x: 3, y: 2 },
-            ])]
-            .iter()
-            .copied()
-            .collect(),
-        };
-
         assert_eq!(
-            tile_1a.cell_immediate_neighbor_coords(TileGridCoord { x: 0, y: 0 }),
+            TILE_1A.cell_immediate_neighbor_coords(TileGridCoord { x: 0, y: 0 }),
             [TileGridCoord { x: 1, y: 0 }]
         );
         assert_eq!(
-            tile_1a.cell_immediate_neighbor_coords(TileGridCoord { x: 1, y: 0 }),
+            TILE_1A.cell_immediate_neighbor_coords(TileGridCoord { x: 1, y: 0 }),
             [
                 TileGridCoord { x: 0, y: 0 },
                 TileGridCoord { x: 1, y: 1 },
@@ -422,11 +501,11 @@ mod test {
             ]
         );
         assert_eq!(
-            tile_1a.cell_immediate_neighbor_coords(TileGridCoord { x: 3, y: 3 }),
+            TILE_1A.cell_immediate_neighbor_coords(TileGridCoord { x: 3, y: 3 }),
             []
         );
         assert_eq!(
-            tile_1a.cell_immediate_neighbor_coords(TileGridCoord { x: 2, y: 3 }),
+            TILE_1A.cell_immediate_neighbor_coords(TileGridCoord { x: 2, y: 3 }),
             [
                 TileGridCoord { x: 1, y: 3 },
                 TileGridCoord { x: 2, y: 2 },
@@ -434,8 +513,44 @@ mod test {
             ]
         );
         assert_eq!(
-            tile_1a.cell_immediate_neighbor_coords(TileGridCoord { x: 3, y: 2 }),
+            TILE_1A.cell_immediate_neighbor_coords(TileGridCoord { x: 3, y: 2 }),
             [TileGridCoord { x: 2, y: 3 },]
+        );
+    }
+
+    #[test]
+    fn start_coords() {
+        assert_eq!(
+            TILE_1A.reachable_coords_starting(),
+            Tile::POSSIBLE_ENTRANCE_COORDS
+        );
+
+        assert_eq!(
+            TILE_2.reachable_coords_starting(),
+            [TileGridCoord { x: 1, y: 3 }, TileGridCoord { x: 3, y: 2 },]
+        );
+    }
+
+    #[test]
+    fn reachable_coords() {
+        assert_eq!(
+            TILE_1A.reachable_coords(),
+            [
+                [true, true, true, true],
+                [true, true, true, true],
+                [true, true, true, true],
+                [true, true, true, false],
+            ]
+        );
+
+        assert_eq!(
+            TILE_2.reachable_coords(),
+            [
+                [true, false, false, false],
+                [true, false, false, true],
+                [false, false, true, true],
+                [false, true, true, true],
+            ]
         );
     }
 }
