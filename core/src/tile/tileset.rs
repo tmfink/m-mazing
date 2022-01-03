@@ -263,7 +263,7 @@ where
                 }
                 let (mut walls, cells) = if let (Some(walls), Some(cells)) = (
                     tile.vert_walls.get_mut(row_num as usize),
-                    tile.cells.get_mut(row_num as usize),
+                    tile.cell_grid.get_mut(row_num as usize),
                 ) {
                     (walls.iter_mut(), cells.iter_mut())
                 } else {
@@ -360,10 +360,10 @@ fn elevators_from_line(
             let c = byte_to_digit(*c)?;
             let d = byte_to_digit(*d)?;
 
-            let point1 = TilePoint::new(a, b)
+            let point1 = TileGridIdx::new(a, b)
                 .ok_or_else(|| err.clone().with_msg("Invalid tile coordinates"))?;
             let point2 =
-                TilePoint::new(c, d).ok_or_else(|| err.with_msg("Invalid tile coordinates"))?;
+                TileGridIdx::new(c, d).ok_or_else(|| err.with_msg("Invalid tile coordinates"))?;
 
             let escalator = EscalatorLocation([point1, point2]);
             tile.escalators
@@ -398,7 +398,7 @@ mod test {
 + +^+ + +
 ";
     const TILE1: Tile = Tile {
-        cells: [
+        cell_grid: [
             [Empty, Warp(Green), Empty, Camera(Available)],
             [Empty, Empty, TimerFlip(Available), Empty],
             [Empty, Empty, Empty, Empty],
@@ -432,7 +432,7 @@ mod test {
 +-+7+-+-+
 ";
     const TILE2: Tile = Tile {
-        cells: [
+        cell_grid: [
             [TimerFlip(Available), Empty, Empty, Warp(Purple)],
             [Empty, Empty, Empty, Warp(Yellow)],
             [Warp(Orange), Empty, Empty, Empty],
@@ -468,7 +468,7 @@ E: 01-23, 00-33, 33-02
 ";
 
     static TILE3: Lazy<Tile> = Lazy::new(|| Tile {
-        cells: [
+        cell_grid: [
             [TimerFlip(Available), Empty, Empty, Warp(Purple)],
             [Empty, Empty, Empty, Warp(Yellow)],
             [Warp(Orange), Empty, Empty, Empty],
@@ -488,9 +488,9 @@ E: 01-23, 00-33, 33-02
             [Blocked, Open, Open, Blocked, Blocked],
         ],
         escalators: [
-            EscalatorLocation([TilePoint { x: 0, y: 1 }, TilePoint { x: 2, y: 3 }]),
-            EscalatorLocation([TilePoint { x: 0, y: 0 }, TilePoint { x: 3, y: 3 }]),
-            EscalatorLocation([TilePoint { x: 3, y: 3 }, TilePoint { x: 0, y: 2 }]),
+            EscalatorLocation([TileGridIdx { x: 0, y: 1 }, TileGridIdx { x: 2, y: 3 }]),
+            EscalatorLocation([TileGridIdx { x: 0, y: 0 }, TileGridIdx { x: 3, y: 3 }]),
+            EscalatorLocation([TileGridIdx { x: 3, y: 3 }, TileGridIdx { x: 0, y: 2 }]),
         ]
         .iter()
         .copied()

@@ -6,7 +6,7 @@ pub mod prelude {
     pub use crate::action::*;
     pub use crate::logging::*;
     pub use crate::role::*;
-    pub use crate::tile::{tileset::*, *};
+    pub use crate::tile::{cell::*, direction::*, grid_index::*, tileset::*, wall::*, *};
     pub use crate::*;
 
     #[cfg(feature = "gui")]

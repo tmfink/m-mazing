@@ -153,7 +153,7 @@ fn render_final_exit(
 ) {
     let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
 
-    let point = TilePoint::new(col_idx as u8, row_idx as u8)
+    let point = TileGridIdx::new(col_idx as u8, row_idx as u8)
         .expect("could not convert row/col idx to tile");
 
     // Z-axis goes "into" the screen since this is right-handed
@@ -227,7 +227,7 @@ impl Tile {
         );
 
         // horizontal walls
-        for (row_idx, row) in self.horz_walls.iter().enumerate() {
+        for (row_idx, row) in self.horz_walls().iter().enumerate() {
             let row_idx = row_idx as f32;
             let y = -GRID_HALF_WIDTH + row_idx * CELL_WIDTH;
             for (col_idx, wall) in row.iter().copied().enumerate() {
@@ -245,7 +245,7 @@ impl Tile {
         }
 
         // vertical walls
-        for (row_idx, row) in self.vert_walls.iter().enumerate() {
+        for (row_idx, row) in self.vert_walls().iter().enumerate() {
             let row_idx = row_idx as f32;
             let y = -GRID_HALF_WIDTH + row_idx * CELL_WIDTH;
             for (col_idx, wall) in row.iter().copied().enumerate() {
@@ -263,7 +263,7 @@ impl Tile {
         }
 
         // todo: render cells
-        for (row_idx, row) in self.cells.iter().enumerate() {
+        for (row_idx, row) in self.cell_grid().iter().enumerate() {
             let row_idx_float = row_idx as f32;
             let y = -GRID_HALF_WIDTH + row_idx_float * CELL_WIDTH;
             for (col_idx, cell) in row.iter().copied().enumerate() {
@@ -288,7 +288,7 @@ impl Tile {
             }
         }
 
-        for escalator in &self.escalators {
+        for escalator in self.escalators() {
             render_escalator(render, *escalator);
         }
 
