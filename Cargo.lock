@@ -394,7 +394,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "m-mazing-util-tile"
+name = "m-mazing-tile-util"
 version = "0.1.0"
 dependencies = [
  "anyhow",
