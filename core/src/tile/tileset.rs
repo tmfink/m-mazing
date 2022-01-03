@@ -360,10 +360,10 @@ fn elevators_from_line(
             let c = byte_to_digit(*c)?;
             let d = byte_to_digit(*d)?;
 
-            let point1 = TileGridIdx::new(a, b)
+            let point1 = TileGridCoord::new(a, b)
                 .ok_or_else(|| err.clone().with_msg("Invalid tile coordinates"))?;
             let point2 =
-                TileGridIdx::new(c, d).ok_or_else(|| err.with_msg("Invalid tile coordinates"))?;
+                TileGridCoord::new(c, d).ok_or_else(|| err.with_msg("Invalid tile coordinates"))?;
 
             let escalator = EscalatorLocation([point1, point2]);
             tile.escalators
@@ -488,9 +488,9 @@ E: 01-23, 00-33, 33-02
             [Blocked, Open, Open, Blocked, Blocked],
         ],
         escalators: [
-            EscalatorLocation([TileGridIdx { x: 0, y: 1 }, TileGridIdx { x: 2, y: 3 }]),
-            EscalatorLocation([TileGridIdx { x: 0, y: 0 }, TileGridIdx { x: 3, y: 3 }]),
-            EscalatorLocation([TileGridIdx { x: 3, y: 3 }, TileGridIdx { x: 0, y: 2 }]),
+            EscalatorLocation([TileGridCoord { x: 0, y: 1 }, TileGridCoord { x: 2, y: 3 }]),
+            EscalatorLocation([TileGridCoord { x: 0, y: 0 }, TileGridCoord { x: 3, y: 3 }]),
+            EscalatorLocation([TileGridCoord { x: 3, y: 3 }, TileGridCoord { x: 0, y: 2 }]),
         ]
         .iter()
         .copied()

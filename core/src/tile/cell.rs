@@ -85,3 +85,9 @@ impl TileTokenParse for TileCell {
         })
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CellItemAvailability {
+    Available,
+    Used,
+}

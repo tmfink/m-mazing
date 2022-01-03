@@ -5,12 +5,12 @@ use crate::prelude::*;
 /// - `x`: goes from left to right
 /// - `y`: goes from top to bottom
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct TileGridIdx {
+pub struct TileGridCoord {
     pub(super) x: u8,
     pub(super) y: u8,
 }
 
-impl TileGridIdx {
+impl TileGridCoord {
     pub const fn new(x: u8, y: u8) -> Option<Self> {
         if x < Tile::CELL_GRID_WIDTH && y < Tile::CELL_GRID_WIDTH {
             Some(Self { x, y })
@@ -22,7 +22,7 @@ impl TileGridIdx {
     pub fn added(self, add: (i8, i8)) -> Option<Self> {
         let new_x = (self.x as i8 + add.0).try_into().ok()?;
         let new_y = (self.y as i8 + add.1).try_into().ok()?;
-        TileGridIdx::new(new_x, new_y)
+        TileGridCoord::new(new_x, new_y)
     }
 
     #[inline(always)]

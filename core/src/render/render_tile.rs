@@ -153,7 +153,7 @@ fn render_final_exit(
 ) {
     let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
 
-    let point = TileGridIdx::new(col_idx as u8, row_idx as u8)
+    let point = TileGridCoord::new(col_idx as u8, row_idx as u8)
         .expect("could not convert row/col idx to tile");
 
     // Z-axis goes "into" the screen since this is right-handed

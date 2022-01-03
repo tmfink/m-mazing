@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 pub mod cell;
 pub mod direction;
-pub mod grid_index;
+pub mod grid_coord;
 pub mod tileset;
 pub mod wall;
 
@@ -32,7 +32,7 @@ impl Tile {
     /// Directions pointing to edge of tile
     ///
     /// Internal tiles will have no directions
-    pub fn outer_edge_directions(&self, cell_point: TileGridIdx) -> Vec<Direction> {
+    pub fn outer_edge_directions(&self, cell_point: TileGridCoord) -> Vec<Direction> {
         const MAX_IDX: u8 = Tile::CELL_GRID_WIDTH - 1;
 
         let mut dirs = Vec::with_capacity(4);
@@ -51,24 +51,28 @@ impl Tile {
         dirs
     }
 
-    pub fn cell_value(&self, point: TileGridIdx) -> TileCell {
+    pub fn cell_value(&self, point: TileGridCoord) -> TileCell {
         self.cell_grid[point.y() as usize][point.x() as usize]
     }
 
     pub fn neighbor_point(
         &self,
-        cell_point: TileGridIdx,
+        cell_point: TileGridCoord,
         direction: Direction,
-    ) -> Option<TileGridIdx> {
+    ) -> Option<TileGridCoord> {
         cell_point.added(direction.neighbor_transform())
     }
 
-    pub fn neighbor_cell(&self, cell_point: TileGridIdx, direction: Direction) -> Option<TileCell> {
+    pub fn neighbor_cell(
+        &self,
+        cell_point: TileGridCoord,
+        direction: Direction,
+    ) -> Option<TileCell> {
         let neighbor_point = self.neighbor_point(cell_point, direction)?;
         Some(self.cell_value(neighbor_point))
     }
 
-    pub fn cell_wall(&self, cell_point: TileGridIdx, direction: Direction) -> WallState {
+    pub fn cell_wall(&self, cell_point: TileGridCoord, direction: Direction) -> WallState {
         let x = cell_point.x() as usize;
         let y = cell_point.y() as usize;
         match direction {
@@ -79,7 +83,7 @@ impl Tile {
         }
     }
 
-    pub fn cell_exit_direction(&self, cell_point: TileGridIdx) -> Direction {
+    pub fn cell_exit_direction(&self, cell_point: TileGridCoord) -> Direction {
         let open_exit_dirs: Vec<Direction> = self
             .outer_edge_directions(cell_point)
             .iter()
@@ -172,13 +176,7 @@ impl FromStr for Tile {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CellItemAvailability {
-    Available,
-    Used,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct EscalatorLocation(pub [TileGridIdx; 2]);
+pub struct EscalatorLocation(pub [TileGridCoord; 2]);
 
 impl EscalatorLocation {
     pub fn rotate(&mut self, spin: SpinDirection) {
@@ -234,8 +232,8 @@ mod test {
                 [Blocked, Open, Open, Blocked, Blocked],
             ],
             escalators: [EscalatorLocation([
-                TileGridIdx { x: 2, y: 3 },
-                TileGridIdx { x: 3, y: 2 },
+                TileGridCoord { x: 2, y: 3 },
+                TileGridCoord { x: 3, y: 2 },
             ])]
             .iter()
             .copied()
@@ -278,8 +276,8 @@ mod test {
                 [Blocked, Blocked, Blocked, Blocked, Blocked],
             ],
             escalators: [EscalatorLocation([
-                TileGridIdx { x: 3, y: 1 },
-                TileGridIdx { x: 2, y: 0 },
+                TileGridCoord { x: 3, y: 1 },
+                TileGridCoord { x: 2, y: 0 },
             ])]
             .iter()
             .copied()
@@ -322,8 +320,8 @@ mod test {
                 [Blocked, Blocked, Blocked, Blocked, Blocked],
             ],
             escalators: [EscalatorLocation([
-                TileGridIdx { x: 0, y: 2 },
-                TileGridIdx { x: 1, y: 3 },
+                TileGridCoord { x: 0, y: 2 },
+                TileGridCoord { x: 1, y: 3 },
             ])]
             .iter()
             .copied()
