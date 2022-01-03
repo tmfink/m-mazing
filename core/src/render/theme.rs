@@ -8,6 +8,7 @@ pub struct Theme {
     pub tile_bg_color: mq::Color,
     pub wall_blocked_color: mq::Color,
     pub wall_open_color: mq::Color,
+    pub wall_entrance_color: mq::Color,
     pub wall_thickness: f32,
     pub warp_thickness: f32,
     pub loot_thickness: f32,
@@ -28,18 +29,20 @@ pub struct Theme {
 
 impl Default for Theme {
     fn default() -> Self {
+        let tile_bg_color = mq::Color {
+            r: 0.88,
+            g: 0.90,
+            b: 0.94,
+            a: 1.0,
+        };
         Theme {
             bg_color: mq::WHITE,
             font_color: mq::DARKGRAY,
             font_size: 40.,
-            tile_bg_color: mq::Color {
-                r: 0.76,
-                g: 0.81,
-                b: 0.88,
-                a: 0.5,
-            },
+            tile_bg_color,
             wall_blocked_color: mq::BLACK,
             wall_open_color: mq::LIGHTGRAY,
+            wall_entrance_color: tile_bg_color,
             wall_thickness: 0.1,
             warp_thickness: 0.05,
             loot_thickness: 0.07,

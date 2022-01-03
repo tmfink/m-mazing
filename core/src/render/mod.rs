@@ -20,7 +20,8 @@ impl WallState {
     fn wall_color(self, render: &RenderState) -> mq::Color {
         match self {
             WallState::Explore(pawn) => pawn.as_color(render),
-            WallState::Open | WallState::Entrance => render.theme.wall_open_color,
+            WallState::Open => render.theme.wall_open_color,
+            WallState::Entrance => render.theme.wall_entrance_color,
             WallState::Blocked => render.theme.wall_blocked_color,
         }
     }
