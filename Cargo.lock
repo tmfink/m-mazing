@@ -410,7 +410,7 @@ dependencies = [
 [[package]]
 name = "macroquad"
 version = "0.3.13"
-source = "git+https://github.com/tmfink/macroquad.git?rev=4e4c5fba9eee7e52a94c00b30e78cb8cea47ac9e#4e4c5fba9eee7e52a94c00b30e78cb8cea47ac9e"
+source = "git+https://github.com/not-fl3/macroquad.git?rev=4883ac04ae716d0d027ebc44698e0042155e72ae#4883ac04ae716d0d027ebc44698e0042155e72ae"
 dependencies = [
  "bumpalo",
  "fontdue",
@@ -425,7 +425,7 @@ dependencies = [
 [[package]]
 name = "macroquad_macro"
 version = "0.1.7"
-source = "git+https://github.com/tmfink/macroquad.git?rev=4e4c5fba9eee7e52a94c00b30e78cb8cea47ac9e#4e4c5fba9eee7e52a94c00b30e78cb8cea47ac9e"
+source = "git+https://github.com/not-fl3/macroquad.git?rev=4883ac04ae716d0d027ebc44698e0042155e72ae#4883ac04ae716d0d027ebc44698e0042155e72ae"
 
 [[package]]
 name = "memchr"

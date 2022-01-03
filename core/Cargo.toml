@@ -22,9 +22,9 @@ thiserror = "1"
 
 [dependencies.macroquad]
 #version = "0.3"
-# pending https://github.com/not-fl3/macroquad/pull/356 (trace macro)
-git = "https://github.com/tmfink/macroquad.git"
-rev = "4e4c5fba9eee7e52a94c00b30e78cb8cea47ac9e"
+# pending publish with https://github.com/not-fl3/macroquad/pull/356 (trace macro)
+git = "https://github.com/not-fl3/macroquad.git"
+rev = "4883ac04ae716d0d027ebc44698e0042155e72ae"
 optional = true
 default-features = false
 
