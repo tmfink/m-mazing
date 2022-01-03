@@ -1,3 +1,5 @@
+use std::sync::mpsc::TryRecvError;
+
 use crate::*;
 
 const LEGEND: &str = "
@@ -19,7 +21,20 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
         return Continuation::Exit;
     }
 
+    let mut should_refresh = false;
     if mq::is_key_pressed(mq::KeyCode::R) {
+        should_refresh = true
+    }
+    match ctx.notify_rx.try_recv() {
+        Ok(Ok(event)) => {
+            info!("new event {:?}", event);
+            should_refresh = true
+        }
+        Ok(Err(err)) => error!("Failed to get new event {}", err),
+        Err(TryRecvError::Empty) => (),
+        Err(TryRecvError::Disconnected) => error!("Notify disconnected"),
+    }
+    if should_refresh {
         match ctx.refresh() {
             Ok(()) => info!("Refreshed ctx"),
             Err(err) => error!("Failed to refresh: {}", err),

@@ -1,10 +1,11 @@
-use std::{fs::File, io::Read, path::PathBuf};
+use std::{fs::File, io::Read, path::PathBuf, sync::mpsc};
 
 use anyhow::{Context, Result};
 use cfg_if::cfg_if;
 use clap::Parser;
 
 use m_mazing_core::prelude::*;
+use notify::Watcher;
 
 cfg_if! {
     if #[cfg(feature = "gui")] {
@@ -51,13 +52,15 @@ fn init_logging(args: &Args) {
 }
 
 #[allow(dead_code)]
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Ctx {
     pub args: Args,
     pub tileset: Vec<(String, Tile)>,
     pub tile_idx: isize,
     pub availability: CellItemAvailability,
     pub text: String,
+    pub notify_rx: mpsc::Receiver<notify::Result<notify::Event>>,
+    pub notify_watcher: notify::RecommendedWatcher,
 }
 
 impl Ctx {
@@ -65,13 +68,23 @@ impl Ctx {
         let mut args = Args::parse();
         args.verbose.set_default(Some(log::Level::Info));
 
+        let (notify_tx, notify_rx) = mpsc::channel();
+        let mut notify_watcher = notify::RecommendedWatcher::new(notify_tx)
+            .context("Failed to create notify watcher")?;
+        notify_watcher
+            .watch(&args.tile_file, notify::RecursiveMode::Recursive)
+            .context(format!("Failed to watch file {:?}", args.tile_file))?;
+
         let mut ctx = Ctx {
             args,
             tileset: Default::default(),
             tile_idx: 0,
             availability: CellItemAvailability::Available,
             text: String::new(),
+            notify_rx,
+            notify_watcher,
         };
+
         ctx.refresh()?;
         Ok(ctx)
     }

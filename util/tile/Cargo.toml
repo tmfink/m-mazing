@@ -19,4 +19,5 @@ cfg-if = "1.0"
 clap = { version = "3.0.0-rc.8", features = ["derive"] }
 clap-verbosity-flag = { git = "https://github.com/tmfink/clap-verbosity-flag", branch = "clap-3.0.0-rc.8" }
 log = "0.4"
+notify = { git = "https://github.com/tmfink/notify", branch = "add-impls" }
 simple_logger = "1.16"
