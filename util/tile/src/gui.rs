@@ -5,9 +5,10 @@ use crate::*;
 const LEGEND: &str = "
 Arrow keys - cycle;
 K/U - toggle cell used;
-[] - rotate
-P - print tile
-R - reload tileset
+[] - rotate;
+P - print;
+R - reload;
+Home/End - start/end;
 ";
 
 pub enum Continuation {
@@ -51,6 +52,12 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
         .tile_idx
         .checked_rem_euclid(ctx.tileset.len() as isize)
         .unwrap_or(0);
+    if mq::is_key_pressed(mq::KeyCode::Home) {
+        ctx.tile_idx = 0;
+    }
+    if mq::is_key_pressed(mq::KeyCode::End) {
+        ctx.tile_idx = ctx.tileset.len() as isize - 1;
+    }
     let tile = ctx.tileset.get_mut(ctx.tile_idx as usize);
 
     if mq::is_key_pressed(mq::KeyCode::K) || mq::is_key_pressed(mq::KeyCode::U) {
