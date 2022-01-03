@@ -4,6 +4,7 @@ use crate::prelude::*;
 
 pub mod cell;
 pub mod direction;
+pub mod escalator;
 pub mod grid_coord;
 pub mod tileset;
 pub mod wall;
@@ -32,49 +33,73 @@ impl Tile {
     /// Directions pointing to edge of tile
     ///
     /// Internal tiles will have no directions
-    pub fn outer_edge_directions(&self, cell_point: TileGridCoord) -> Vec<Direction> {
+    pub fn cell_outer_edge_directions(&self, coord: TileGridCoord) -> Vec<Direction> {
         const MAX_IDX: u8 = Tile::CELL_GRID_WIDTH - 1;
 
         let mut dirs = Vec::with_capacity(4);
-        if cell_point.x() == 0 {
+        if coord.x() == 0 {
             dirs.push(Direction::Left);
         }
-        if cell_point.x() == MAX_IDX {
+        if coord.x() == MAX_IDX {
             dirs.push(Direction::Right);
         }
-        if cell_point.y() == 0 {
+        if coord.y() == 0 {
             dirs.push(Direction::Up);
         }
-        if cell_point.y() == MAX_IDX {
+        if coord.y() == MAX_IDX {
             dirs.push(Direction::Down);
         }
         dirs
     }
 
-    pub fn cell_value(&self, point: TileGridCoord) -> TileCell {
-        self.cell_grid[point.y() as usize][point.x() as usize]
+    pub fn cell_value(&self, coord: TileGridCoord) -> TileCell {
+        self.cell_grid[coord.y() as usize][coord.x() as usize]
     }
 
-    pub fn neighbor_point(
+    /// Neighbor coords accessible via cardinal direction walk
+    pub fn cell_cardinal_neighbor_coords(
         &self,
-        cell_point: TileGridCoord,
+        coord: TileGridCoord,
         direction: Direction,
     ) -> Option<TileGridCoord> {
-        cell_point.added(direction.neighbor_transform())
+        coord.added(direction.neighbor_transform())
     }
 
-    pub fn neighbor_cell(
+    /// Neighbor accessible via cardinal direction walk
+    pub fn cell_cardinal_neighbor(
         &self,
-        cell_point: TileGridCoord,
+        coord: TileGridCoord,
         direction: Direction,
     ) -> Option<TileCell> {
-        let neighbor_point = self.neighbor_point(cell_point, direction)?;
+        let neighbor_point = self.cell_cardinal_neighbor_coords(coord, direction)?;
         Some(self.cell_value(neighbor_point))
     }
 
-    pub fn cell_wall(&self, cell_point: TileGridCoord, direction: Direction) -> WallState {
-        let x = cell_point.x() as usize;
-        let y = cell_point.y() as usize;
+    /// Coordinates of "neighbors" in current tile that are "one step" away
+    /// (either by cardinal direction walk or escalator).
+    pub fn cell_immediate_neighbor_coords(&self, coord: TileGridCoord) -> Vec<TileGridCoord> {
+        let cardinal_neighbors = Direction::ALL_DIRECTIONS.iter().copied().filter_map(|dir| {
+            self.cell_cardinal_neighbor_coords(coord, dir)
+                // todo: handle orange-only walls
+                .filter(|_| self.cell_wall(coord, dir) == WallState::Open)
+        });
+        let escalator_neighbors = self
+            .escalators
+            .iter()
+            .filter_map(|esc_loc| esc_loc.coord_neighbor(coord));
+
+        let mut neighbors: Vec<_> = cardinal_neighbors.chain(escalator_neighbors).collect();
+
+        // we could have duplicates
+        neighbors.sort_unstable();
+        neighbors.dedup();
+
+        neighbors
+    }
+
+    pub fn cell_wall(&self, coord: TileGridCoord, direction: Direction) -> WallState {
+        let x = coord.x() as usize;
+        let y = coord.y() as usize;
         match direction {
             Direction::Up => self.horz_walls[y][x],
             Direction::Down => self.horz_walls[y + 1][x],
@@ -83,12 +108,12 @@ impl Tile {
         }
     }
 
-    pub fn cell_exit_direction(&self, cell_point: TileGridCoord) -> Direction {
+    pub fn cell_exit_direction(&self, coord: TileGridCoord) -> Direction {
         let open_exit_dirs: Vec<Direction> = self
-            .outer_edge_directions(cell_point)
+            .cell_outer_edge_directions(coord)
             .iter()
             .copied()
-            .filter(|dir| self.cell_wall(cell_point, *dir) == WallState::Open)
+            .filter(|dir| self.cell_wall(coord, *dir) == WallState::Open)
             .collect();
 
         let dir = match open_exit_dirs.as_slice() {
@@ -96,7 +121,7 @@ impl Tile {
             _ => {
                 warn!(
                     "Unable to find a good direction for exit direction at {:?}",
-                    cell_point
+                    coord
                 );
                 Direction::Right
             }
@@ -128,11 +153,11 @@ impl Tile {
         &self.escalators
     }
 
-    pub fn cells(&self) -> impl Iterator<Item = &TileCell> {
+    pub fn cells_iter(&self) -> impl Iterator<Item = &TileCell> {
         self.cell_grid.iter().flat_map(|row| row.iter())
     }
 
-    pub fn cells_mut(&mut self) -> impl Iterator<Item = &mut TileCell> {
+    pub fn cells_iter_mut(&mut self) -> impl Iterator<Item = &mut TileCell> {
         self.cell_grid.iter_mut().flat_map(|row| row.iter_mut())
     }
 
@@ -172,17 +197,6 @@ impl FromStr for Tile {
     type Err = tileset::TileParsingError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         tileset::tile_from_str(s)
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct EscalatorLocation(pub [TileGridCoord; 2]);
-
-impl EscalatorLocation {
-    pub fn rotate(&mut self, spin: SpinDirection) {
-        for point in self.0.iter_mut() {
-            point.rotate(spin);
-        }
     }
 }
 
@@ -362,5 +376,66 @@ mod test {
             revert1.rotate(SpinDirection::Clockwise);
             assert_eq!(revert1, tile);
         }
+    }
+
+    #[test]
+    fn neighbor() {
+        let tile_1a = Tile {
+            cell_grid: [
+                [TimerFlip(Available), Empty, Empty, Warp(Purple)],
+                [Empty, Empty, Empty, Warp(Yellow)],
+                [Warp(Orange), Empty, Empty, Empty],
+                [Warp(Green), Empty, Empty, Empty],
+            ],
+            horz_walls: [
+                [Blocked, Blocked, Explore(Orange), Blocked],
+                [Blocked, Open, Open, Blocked],
+                [Blocked, Open, Open, Blocked],
+                [Blocked, Open, Open, Blocked],
+                [Blocked, Explore(Yellow), Blocked, Blocked],
+            ],
+            vert_walls: [
+                [Blocked, Open, Open, Open, Blocked],
+                [Explore(Purple), Open, Open, Open, Blocked],
+                [Blocked, Open, Open, Blocked, Explore(Green)],
+                [Blocked, Open, Open, Blocked, Blocked],
+            ],
+            escalators: [EscalatorLocation([
+                TileGridCoord { x: 2, y: 3 },
+                TileGridCoord { x: 3, y: 2 },
+            ])]
+            .iter()
+            .copied()
+            .collect(),
+        };
+
+        assert_eq!(
+            tile_1a.cell_immediate_neighbor_coords(TileGridCoord { x: 0, y: 0 }),
+            [TileGridCoord { x: 1, y: 0 }]
+        );
+        assert_eq!(
+            tile_1a.cell_immediate_neighbor_coords(TileGridCoord { x: 1, y: 0 }),
+            [
+                TileGridCoord { x: 0, y: 0 },
+                TileGridCoord { x: 1, y: 1 },
+                TileGridCoord { x: 2, y: 0 },
+            ]
+        );
+        assert_eq!(
+            tile_1a.cell_immediate_neighbor_coords(TileGridCoord { x: 3, y: 3 }),
+            []
+        );
+        assert_eq!(
+            tile_1a.cell_immediate_neighbor_coords(TileGridCoord { x: 2, y: 3 }),
+            [
+                TileGridCoord { x: 1, y: 3 },
+                TileGridCoord { x: 2, y: 2 },
+                TileGridCoord { x: 3, y: 2 },
+            ]
+        );
+        assert_eq!(
+            tile_1a.cell_immediate_neighbor_coords(TileGridCoord { x: 3, y: 2 }),
+            [TileGridCoord { x: 2, y: 3 },]
+        );
     }
 }

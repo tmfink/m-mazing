@@ -71,7 +71,7 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
     mq::set_camera(&whole_camera);
 
     if let Some((tile_name, tile)) = tile {
-        for cell in tile.cells_mut() {
+        for cell in tile.cells_iter_mut() {
             cell.set_availability(ctx.availability);
         }
         if mq::is_key_pressed(mq::KeyCode::LeftBracket) {

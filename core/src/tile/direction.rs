@@ -7,6 +7,8 @@ pub enum Direction {
 }
 
 impl Direction {
+    pub const ALL_DIRECTIONS: [Direction; 4] = [Self::Right, Self::Up, Self::Left, Self::Down];
+
     /// What to add to point to get neighbor
     pub fn neighbor_transform(self) -> (i8, i8) {
         match self {
