@@ -28,6 +28,10 @@ pub struct Args {
     /// File with tile data
     #[clap(long, short)]
     tile_file: PathBuf,
+
+    /// Start idx
+    #[clap(long = "start-idx", short = 'i', default_value = "0")]
+    index: usize,
 }
 
 #[cfg(any(not(feature = "gui"), feature = "log-rs"))]
@@ -75,10 +79,11 @@ impl Ctx {
             .watch(&args.tile_file, notify::RecursiveMode::Recursive)
             .context(format!("Failed to watch file {:?}", args.tile_file))?;
 
+        let tile_idx = args.index as isize;
         let mut ctx = Ctx {
             args,
             tileset: Default::default(),
-            tile_idx: 0,
+            tile_idx,
             availability: CellItemAvailability::Available,
             text: String::new(),
             notify_rx,
