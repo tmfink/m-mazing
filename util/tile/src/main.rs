@@ -119,7 +119,10 @@ fn main() -> Result<()> {
 #[cfg(feature = "gui")]
 #[macroquad::main("M-Mazing Tile Util")]
 async fn main() -> Result<()> {
-    let mut ctx = Ctx::new().with_context(|| "Failed to generate context")?;
+    let mut ctx = Ctx::new()
+        .with_context(|| "Failed to generate context")
+        // bug: macroquad does not "forward" result to real main(), so unwrap() for now
+        .unwrap();
     let render = RenderState::default();
 
     #[cfg(feature = "log-rs")]

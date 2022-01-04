@@ -31,14 +31,14 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
             info!("new event {:?}", event);
             should_refresh = true
         }
-        Ok(Err(err)) => error!("Failed to get new event {}", err),
+        Ok(Err(err)) => error!("Failed to get new event {:#}", err),
         Err(TryRecvError::Empty) => (),
         Err(TryRecvError::Disconnected) => error!("Notify disconnected"),
     }
     if should_refresh {
         match ctx.refresh() {
             Ok(()) => info!("Refreshed ctx"),
-            Err(err) => error!("Failed to refresh: {}", err),
+            Err(err) => error!("Failed to refresh: {:#}", err),
         }
     }
 
