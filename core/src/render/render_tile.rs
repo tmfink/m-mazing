@@ -205,6 +205,39 @@ fn render_final_exit(
     gl.pop_model_matrix();
 }
 
+fn render_wall(render: &RenderState, a: mq::Vec2, b: mq::Vec2, wall: WallState) {
+    if wall == WallState::OrangeOnly {
+        let hole_halfwidth = 0.5 * render.theme.wall_orange_only_hole_width;
+        let hole_a = a.lerp(b, 0.5 - hole_halfwidth);
+        let hole_b = a.lerp(b, 0.5 + hole_halfwidth);
+        mq::draw_line(
+            a.x,
+            a.y,
+            hole_a.x,
+            hole_a.y,
+            render.theme.wall_thickness,
+            render.theme.wall_orange_only_color,
+        );
+        mq::draw_line(
+            hole_b.x,
+            hole_b.y,
+            b.x,
+            b.y,
+            render.theme.wall_thickness,
+            render.theme.wall_orange_only_color,
+        );
+    } else {
+        mq::draw_line(
+            a.x,
+            a.y,
+            b.x,
+            b.y,
+            render.theme.wall_thickness,
+            wall.wall_color(render),
+        );
+    }
+}
+
 impl Tile {
     pub fn render(&self, pos: mq::Vec2, render: &RenderState) {
         // SAFETY: must never call in child frame
@@ -239,13 +272,11 @@ impl Tile {
                     let col_idx = col_idx as f32;
                     let x = -GRID_HALF_WIDTH + col_idx * CELL_WIDTH;
                     if pred(wall) {
-                        mq::draw_line(
-                            x,
-                            y,
-                            x + CELL_WIDTH,
-                            y,
-                            render.theme.wall_thickness,
-                            wall.wall_color(render),
+                        render_wall(
+                            render,
+                            mq::Vec2::new(x, y),
+                            mq::Vec2::new(x + CELL_WIDTH, y),
+                            wall,
                         );
                     }
                 }
@@ -259,13 +290,11 @@ impl Tile {
                     let col_idx = col_idx as f32;
                     let x = -GRID_HALF_WIDTH + col_idx * CELL_WIDTH;
                     if pred(wall) {
-                        mq::draw_line(
-                            x,
-                            y,
-                            x,
-                            y + CELL_WIDTH,
-                            render.theme.wall_thickness,
-                            wall.wall_color(render),
+                        render_wall(
+                            render,
+                            mq::Vec2::new(x, y),
+                            mq::Vec2::new(x, y + CELL_WIDTH),
+                            wall,
                         );
                     }
                 }

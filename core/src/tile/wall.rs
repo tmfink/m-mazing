@@ -6,18 +6,20 @@ use crate::prelude::*;
 pub enum WallState {
     Open,
     Blocked,
+    OrangeOnly,
     Explore(Pawn),
     Entrance,
 }
 
 impl TileTokenParse for WallState {
-    const ALLOWED_CHARS: &'static str = " -|^5678";
+    const ALLOWED_CHARS: &'static str = " -|^5678$";
     const NAME: &'static str = "Wall";
 
     fn parse(value: u8) -> Option<Self> {
         Some(match value {
             b'-' | b'|' => Self::Blocked,
             b' ' => Self::Open,
+            b'$' => Self::OrangeOnly,
             b'5' => Self::Explore(Pawn::Green),
             b'6' => Self::Explore(Pawn::Orange),
             b'7' => Self::Explore(Pawn::Yellow),

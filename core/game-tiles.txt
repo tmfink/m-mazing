@@ -3,6 +3,7 @@
 # + cell corner placeholder (no data)
 # ^ entrance
 # - or |  wall
+# $ orange-only wall
 # 1,2,3,4 - warp destination (Green, Orange, Yellow, Purple)
 #    1 - Green
 #    2 - Orange
@@ -175,7 +176,7 @@ E: 12-21
 +-+5+-+-+
 
 @12
-+ +-+-+-+
++-+-+-+-+
 |   |   |
 + +-+-+-+
 7 | | |2|
@@ -185,3 +186,14 @@ E: 12-21
  O|   |4|
 +-+-+-+-+
 E: 02-13, 10-21
+
+@13
++-+-+5+-+
+|   |   |
++ + +-+ +
+^ |   $ |
++-+ +-+ +
+| | |4  |
++ + +-+ +
+  |     |
++-+7+-+-+

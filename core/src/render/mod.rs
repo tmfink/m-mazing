@@ -21,6 +21,7 @@ impl WallState {
         match self {
             WallState::Explore(pawn) => pawn.as_color(render),
             WallState::Open => render.theme.wall_open_color,
+            WallState::OrangeOnly => render.theme.wall_orange_only_color,
             WallState::Entrance => render.theme.wall_entrance_color,
             WallState::Blocked => render.theme.wall_blocked_color,
         }

@@ -116,7 +116,10 @@ impl Tile {
                     }
                 };
                 match self.cell_wall(*coord, dir) {
-                    WallState::Entrance | WallState::Explore(_) | WallState::Open => true,
+                    WallState::Entrance
+                    | WallState::Explore(_)
+                    | WallState::Open
+                    | WallState::OrangeOnly => true,
                     WallState::Blocked => false,
                 }
             })
