@@ -205,7 +205,13 @@ fn render_final_exit(
     gl.pop_model_matrix();
 }
 
-fn render_wall(render: &RenderState, a: mq::Vec2, b: mq::Vec2, wall: WallState) {
+fn render_wall(
+    render: &RenderState,
+    a: mq::Vec2,
+    b: mq::Vec2,
+    wall: WallState,
+    tile_bg_color: mq::Color,
+) {
     if wall == WallState::OrangeOnly {
         let hole_halfwidth = 0.5 * render.theme.wall_orange_only_hole_width;
         let hole_a = a.lerp(b, 0.5 - hole_halfwidth);
@@ -233,7 +239,7 @@ fn render_wall(render: &RenderState, a: mq::Vec2, b: mq::Vec2, wall: WallState) 
             b.x,
             b.y,
             render.theme.wall_thickness,
-            wall.wall_color(render),
+            wall.wall_color(render, tile_bg_color),
         );
     }
 }
@@ -255,12 +261,17 @@ impl Tile {
             translation,
         ));
 
+        let tile_bg_color = if self.has_camera() {
+            render.theme.tile_camera_bg_color
+        } else {
+            render.theme.tile_normal_bg_color
+        };
         mq::draw_rectangle(
             -GRID_HALF_WIDTH,
             -GRID_HALF_WIDTH,
             GRID_WIDTH,
             GRID_WIDTH,
-            render.theme.tile_bg_color,
+            tile_bg_color,
         );
 
         let render_walls = |pred: fn(WallState) -> bool| {
@@ -277,6 +288,7 @@ impl Tile {
                             mq::Vec2::new(x, y),
                             mq::Vec2::new(x + CELL_WIDTH, y),
                             wall,
+                            tile_bg_color,
                         );
                     }
                 }
@@ -295,6 +307,7 @@ impl Tile {
                             mq::Vec2::new(x, y),
                             mq::Vec2::new(x, y + CELL_WIDTH),
                             wall,
+                            tile_bg_color,
                         );
                     }
                 }

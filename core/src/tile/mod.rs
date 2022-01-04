@@ -226,6 +226,11 @@ impl Tile {
         }
         *self = new_tile;
     }
+
+    pub fn has_camera(&self) -> bool {
+        self.cells_iter()
+            .any(|cell| matches!(cell, TileCell::Camera(_)))
+    }
 }
 
 pub fn rotate_2d_array<T: Copy, const WIDTH: usize, const HEIGHT: usize>(
