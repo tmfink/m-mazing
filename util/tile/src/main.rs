@@ -34,8 +34,10 @@ pub struct Args {
     index: usize,
 }
 
-#[cfg(any(not(feature = "gui"), feature = "log-rs"))]
+#[cfg(feature = "log-rs")]
 fn init_logging(args: &Args) {
+    use log::*;
+
     let level = match args.verbose.log_level() {
         None => LevelFilter::Off,
         Some(level) => match level {
@@ -112,7 +114,7 @@ impl Ctx {
 fn main() -> Result<()> {
     let ctx = Ctx::new().with_context(|| "Failed to generate context")?;
 
-    #[cfg(any(not(feature = "gui"), feature = "logs-rs"))]
+    #[cfg(feature = "log-rs")]
     init_logging(&ctx.args);
 
     info!("tileset = {:#?}", ctx.tileset);
