@@ -22,8 +22,12 @@ cfg_if! {
 #[clap(about, version, author)]
 pub struct Args {
     /// Log verbosity
-    #[clap(flatten)]
-    verbose: clap_verbosity_flag::Verbosity,
+    #[clap(long, short, parse(from_occurrences))]
+    verbose: i32,
+
+    /// Quiet log
+    #[clap(long, short, parse(from_occurrences), conflicts_with = "verbose")]
+    quiet: i32,
 
     /// File with tile data
     #[clap(long, short)]
@@ -36,19 +40,13 @@ pub struct Args {
 
 #[cfg(feature = "log-rs")]
 fn init_logging(args: &Args) {
-    use log::*;
+    use log::{LevelFilter::*, *};
 
-    let level = match args.verbose.log_level() {
-        None => LevelFilter::Off,
-        Some(level) => match level {
-            Level::Error => LevelFilter::Error,
-            Level::Warn => LevelFilter::Warn,
-            Level::Info => LevelFilter::Info,
-            Level::Debug => LevelFilter::Debug,
-            Level::Trace => LevelFilter::Trace,
-        },
-    };
+    let levels = [Off, Error, Warn, Info, Debug, Trace];
+    let level_count = 2 + args.verbose - args.quiet;
 
+    let idx = level_count.clamp(0, (levels.len() - 1) as i32);
+    let level = levels[idx as usize];
     simple_logger::SimpleLogger::new()
         .with_level(level)
         .with_utc_timestamps()
@@ -71,8 +69,7 @@ pub struct Ctx {
 
 impl Ctx {
     fn new() -> Result<Ctx> {
-        let mut args = Args::parse();
-        args.verbose.set_default(Some(log::Level::Info));
+        let args = Args::parse();
 
         let (notify_tx, notify_rx) = mpsc::channel();
         let mut notify_watcher = notify::RecommendedWatcher::new(notify_tx)
