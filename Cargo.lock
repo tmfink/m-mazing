@@ -380,6 +380,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "m-mazing-client"
+version = "0.1.0"
+dependencies = [
+ "m-mazing-core",
+]
+
+[[package]]
 name = "m-mazing-core"
 version = "0.1.0"
 dependencies = [

@@ -1,11 +1,13 @@
 pub mod action;
 pub mod role;
+pub mod scenario;
 pub mod tile;
 
 pub mod prelude {
     pub use crate::action::*;
     pub use crate::logging::*;
     pub use crate::role::*;
+    pub use crate::scenario::*;
     pub use crate::tile::{
         cell::*, direction::*, escalator::*, grid_coord::*, tileset::*, wall::*, *,
     };

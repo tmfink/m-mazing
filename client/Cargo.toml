@@ -1,0 +1,15 @@
+[package]
+name = "m-mazing-client"
+version = "0.1.0"
+edition = "2021"
+authors = ["Travis Finkenauer <tmfinken@gmail.com>"]
+license = "MIT OR Apache-2.0"
+categories = ["games"]
+
+[features]
+default = ["log-rs"]
+log-rs = ["m-mazing-core/log-rs"]
+
+[dependencies]
+m-mazing-core = { path = "../core"  }
+
