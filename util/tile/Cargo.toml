@@ -18,5 +18,5 @@ anyhow = "1.0"
 cfg-if = "1.0"
 clap = { version = "3", features = ["derive"] }
 log = "0.4"
-notify = { git = "https://github.com/tmfink/notify", branch = "add-impls" }
+notify = { git = "https://github.com/notify-rs/notify", rev = "704e6d6678d3ce7103b8b7aec83455b9536a5337" }
 simple_logger = "1.16"
