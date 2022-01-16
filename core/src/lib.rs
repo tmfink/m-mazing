@@ -5,13 +5,13 @@ pub mod tile;
 
 pub mod prelude {
     pub use crate::action::*;
-    pub use crate::logging::*;
     pub use crate::role::*;
     pub use crate::scenario::*;
     pub use crate::tile::{
         cell::*, direction::*, escalator::*, grid_coord::*, tileset::*, wall::*, *,
     };
     pub use crate::*;
+    pub use log::*;
 
     #[cfg(feature = "gui")]
     pub use crate::render::{camera::*, shape::*, theme::*, *};
@@ -20,15 +20,7 @@ pub mod prelude {
 cfg_if! {
     if #[cfg(feature = "gui")] {
         pub mod render;
-        pub use macroquad;
-    }
-}
-
-cfg_if! {
-    if #[cfg(any(not(feature = "gui"), feature = "logs-rs"))] {
-        pub use log as logging;
-    } else {
-        pub use macroquad::logging;
+        use bevy::prelude::*;
     }
 }
 

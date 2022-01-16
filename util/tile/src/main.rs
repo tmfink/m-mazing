@@ -38,7 +38,6 @@ pub struct Args {
     index: usize,
 }
 
-#[cfg(feature = "log-rs")]
 fn init_logging(args: &Args) {
     use log::{LevelFilter::*, *};
 
@@ -111,7 +110,6 @@ impl Ctx {
 fn main() -> Result<()> {
     let ctx = Ctx::new().with_context(|| "Failed to generate context")?;
 
-    #[cfg(feature = "log-rs")]
     init_logging(&ctx.args);
 
     info!("tileset = {:#?}", ctx.tileset);
@@ -119,7 +117,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-// todo: manual mq::Window::new() to support anyhow::Result
+// todo: manual Window::new() to support anyhow::Result
 #[cfg(feature = "gui")]
 #[macroquad::main("M-Mazing Tile Util")]
 async fn main() -> Result<()> {
@@ -129,13 +127,12 @@ async fn main() -> Result<()> {
         .unwrap();
     let render = RenderState::default();
 
-    #[cfg(feature = "log-rs")]
     init_logging(&ctx.args);
 
     info!("tileset: {:#?}", ctx.tileset);
 
     loop {
-        mq::clear_background(render.theme.bg_color);
+        clear_background(render.theme.bg_color);
 
         match update(&mut ctx) {
             Continuation::Continue => (),
@@ -143,7 +140,7 @@ async fn main() -> Result<()> {
         }
         draw(&ctx, &render);
 
-        mq::next_frame().await
+        next_frame().await
     }
 
     Ok(())

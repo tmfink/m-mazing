@@ -9,24 +9,16 @@ description = "Common logic for game based on Magic Maze"
 
 [features]
 default = ["gui"]
-gui = ["macroquad"]
-log-rs = ["macroquad/log-rs"]
+gui = ["bevy"]
 
 [dependencies]
 arrayvec = "0.7"
+bevy = { version = "0.6.0", features = ["dynamic"], optional = true }
 cfg-if = "1.0"
 env_logger = "0.9"
 itertools = "0.10"
 log = "0.4"
 thiserror = "1"
-
-[dependencies.macroquad]
-#version = "0.3"
-# pending publish with https://github.com/not-fl3/macroquad/pull/356 (trace macro)
-git = "https://github.com/not-fl3/macroquad.git"
-rev = "4883ac04ae716d0d027ebc44698e0042155e72ae"
-optional = true
-default-features = false
 
 [dev-dependencies]
 once_cell = "1.9"

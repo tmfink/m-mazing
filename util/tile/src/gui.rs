@@ -18,12 +18,12 @@ pub enum Continuation {
 
 #[must_use]
 pub fn update(ctx: &mut Ctx) -> Continuation {
-    if mq::is_key_pressed(mq::KeyCode::Q) || mq::is_key_pressed(mq::KeyCode::Escape) {
+    if is_key_pressed(mq::KeyCode::Q) || mq::is_key_pressed(mq::KeyCode::Escape) {
         return Continuation::Exit;
     }
 
     let mut should_refresh = false;
-    if mq::is_key_pressed(mq::KeyCode::R) {
+    if is_key_pressed(mq::KeyCode::R) {
         should_refresh = true
     }
     match ctx.notify_rx.try_recv() {
@@ -42,25 +42,25 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
         }
     }
 
-    if mq::is_key_pressed(mq::KeyCode::Right) || mq::is_key_pressed(mq::KeyCode::Down) {
+    if is_key_pressed(mq::KeyCode::Right) || mq::is_key_pressed(mq::KeyCode::Down) {
         ctx.tile_idx += 1;
     }
-    if mq::is_key_pressed(mq::KeyCode::Left) || mq::is_key_pressed(mq::KeyCode::Up) {
+    if is_key_pressed(mq::KeyCode::Left) || mq::is_key_pressed(mq::KeyCode::Up) {
         ctx.tile_idx -= 1;
     }
     ctx.tile_idx = ctx
         .tile_idx
         .checked_rem_euclid(ctx.tileset.len() as isize)
         .unwrap_or(0);
-    if mq::is_key_pressed(mq::KeyCode::Home) {
+    if is_key_pressed(mq::KeyCode::Home) {
         ctx.tile_idx = 0;
     }
-    if mq::is_key_pressed(mq::KeyCode::End) {
+    if is_key_pressed(mq::KeyCode::End) {
         ctx.tile_idx = ctx.tileset.len() as isize - 1;
     }
     let tile = ctx.tileset.get_mut(ctx.tile_idx as usize);
 
-    if mq::is_key_pressed(mq::KeyCode::K) || mq::is_key_pressed(mq::KeyCode::U) {
+    if is_key_pressed(mq::KeyCode::K) || mq::is_key_pressed(mq::KeyCode::U) {
         ctx.availability = match ctx.availability {
             CellItemAvailability::Available => CellItemAvailability::Used,
             CellItemAvailability::Used => CellItemAvailability::Available,
@@ -68,23 +68,23 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
     }
 
     // todo: smarter fit rect for all tiles
-    let fit_rect = mq::Rect {
+    let fit_rect = Rect {
         x: -3.,
         y: -3.,
         w: 6.,
         h: 6.,
     };
     let whole_camera = camera_zoom_to_fit(fit_rect);
-    mq::set_camera(&whole_camera);
+    set_camera(&whole_camera);
 
     if let Some((tile_name, tile)) = tile {
         for cell in tile.cells_iter_mut() {
             cell.set_availability(ctx.availability);
         }
-        if mq::is_key_pressed(mq::KeyCode::LeftBracket) {
+        if is_key_pressed(mq::KeyCode::LeftBracket) {
             tile.rotate(SpinDirection::CounterClockwise);
         }
-        if mq::is_key_pressed(mq::KeyCode::RightBracket) {
+        if is_key_pressed(mq::KeyCode::RightBracket) {
             tile.rotate(SpinDirection::Clockwise);
         }
         ctx.text = format!(
@@ -95,7 +95,7 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
         ctx.text = "no tile".to_string();
     }
 
-    if mq::is_key_pressed(mq::KeyCode::P) {
+    if is_key_pressed(mq::KeyCode::P) {
         println!("{:#?}", tile);
     }
 
@@ -104,16 +104,16 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
 
 pub fn draw(ctx: &Ctx, render: &RenderState) {
     if let Some((_tile_name, tile)) = ctx.tileset.get(ctx.tile_idx as usize) {
-        tile.render(mq::Vec2::default(), render);
+        tile.render(Vec2::default(), render);
     }
     // screen space camera for text
-    mq::set_default_camera();
-    let (font_size, font_scale, font_scale_aspect) = mq::camera_font_scale(render.theme.font_size);
+    set_default_camera();
+    let (font_size, font_scale, font_scale_aspect) = camera_font_scale(render.theme.font_size);
     draw_text_align(
         &ctx.text,
         AlignHoriz::Center,
         AlignVert::Bottom,
-        mq::TextParams {
+        TextParams {
             color: render.theme.font_color,
             font_size,
             font_scale,
@@ -126,7 +126,7 @@ pub fn draw(ctx: &Ctx, render: &RenderState) {
         LEGEND.trim(),
         AlignHoriz::Left,
         AlignVert::Top,
-        mq::TextParams {
+        TextParams {
             color: render.theme.font_color,
             font_size,
             font_scale,

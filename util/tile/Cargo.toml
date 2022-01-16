@@ -7,9 +7,8 @@ license = "MIT OR Apache-2.0"
 categories = ["games"]
 
 [features]
-default = ["gui", "log-rs"]
+default = ["gui"]
 gui = ["m-mazing-core/gui"]
-log-rs = ["m-mazing-core/log-rs"]
 
 [dependencies]
 m-mazing-core = { path = "../../core", default-features = false }

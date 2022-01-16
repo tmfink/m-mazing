@@ -1,5 +1,3 @@
-use macroquad::prelude as mq;
-
 use crate::prelude::*;
 
 const GRID_WIDTH: f32 = Tile::CELL_GRID_WIDTH as f32;
@@ -7,6 +5,7 @@ const GRID_HALF_WIDTH: f32 = 0.5 * GRID_WIDTH;
 const CELL_WIDTH: f32 = 1.0;
 const CELL_HALF_WIDTH: f32 = 0.5 * CELL_WIDTH;
 
+/*
 fn render_timer(render: &RenderState, x: f32, y: f32) {
     let x_left = x + 0.25 * CELL_WIDTH;
     let x_right = x + 0.75 * CELL_WIDTH;
@@ -14,11 +13,11 @@ fn render_timer(render: &RenderState, x: f32, y: f32) {
     let y_bottom = y + 0.8 * CELL_WIDTH;
 
     let points = [
-        mq::Vec2::new(x_left, y_top),
-        mq::Vec2::new(x_right, y_top),
-        mq::Vec2::new(x_left, y_bottom),
-        mq::Vec2::new(x_right, y_bottom),
-        mq::Vec2::new(x_left, y_top),
+        Vec2::new(x_left, y_top),
+        Vec2::new(x_right, y_top),
+        Vec2::new(x_left, y_bottom),
+        Vec2::new(x_right, y_bottom),
+        Vec2::new(x_left, y_top),
     ];
     shape::draw_connected_line(
         points.iter().copied(),
@@ -35,12 +34,12 @@ fn render_used_marker(render: &RenderState, x: f32, y: f32) {
 
     let thickness = render.theme.used_marker_thickness;
     let color = render.theme.used_marker_color;
-    mq::draw_line(x_left, y_top, x_right, y_bottom, thickness, color);
-    mq::draw_line(x_left, y_bottom, x_right, y_top, thickness, color);
+    draw_line(x_left, y_top, x_right, y_bottom, thickness, color);
+    draw_line(x_left, y_bottom, x_right, y_top, thickness, color);
 }
 
 fn render_warp(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
-    let center = mq::Vec2::new(x + CELL_HALF_WIDTH, y + CELL_HALF_WIDTH);
+    let center = Vec2::new(x + CELL_HALF_WIDTH, y + CELL_HALF_WIDTH);
 
     const NUM_ANGLES: u32 = 8;
     const NUM_RADII: u32 = 24;
@@ -51,7 +50,7 @@ fn render_warp(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
     let radii = (0..NUM_RADII).map(|x| x as f32 * CELL_HALF_WIDTH * 0.8 / NUM_RADII as f32);
     let points = angles
         .zip(radii)
-        .map(|(angle, radius)| mq::polar_to_cartesian(radius, angle) + center);
+        .map(|(angle, radius)| polar_to_cartesian(radius, angle) + center);
     shape::draw_connected_line(points, render.theme.warp_thickness, pawn.as_color(render));
 }
 
@@ -64,11 +63,11 @@ fn render_loot(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
     let y_bottom = y + 0.9 * CELL_WIDTH;
 
     let points = [
-        mq::Vec2::new(x_right, y_mid),
-        mq::Vec2::new(x_mid, y_top),
-        mq::Vec2::new(x_left, y_mid),
-        mq::Vec2::new(x_mid, y_bottom),
-        mq::Vec2::new(x_right, y_mid),
+        Vec2::new(x_right, y_mid),
+        Vec2::new(x_mid, y_top),
+        Vec2::new(x_left, y_mid),
+        Vec2::new(x_mid, y_bottom),
+        Vec2::new(x_right, y_mid),
     ];
     shape::draw_connected_line(
         points.iter().copied(),
@@ -77,22 +76,22 @@ fn render_loot(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
     );
 }
 
-fn render_camera(render: &RenderState, gl: &mut mq::QuadGl, x: f32, y: f32) {
-    let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
-    let translation = mq::Vec3::new(x + 0.5, y + 0.5, 0.);
-    let rotation = mq::Quat::IDENTITY;
-    gl.push_model_matrix(mq::Mat4::from_scale_rotation_translation(
+fn render_camera(render: &RenderState, gl: &mut QuadGl, x: f32, y: f32) {
+    let scale = Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
+    let translation = Vec3::new(x + 0.5, y + 0.5, 0.);
+    let rotation = Quat::IDENTITY;
+    gl.push_model_matrix(Mat4::from_scale_rotation_translation(
         scale,
         rotation,
         translation,
     ));
 
     let points = [
-        mq::Vec2::new(-0.35, 0.0),
-        mq::Vec2::new(-0.175, 0.15),
-        mq::Vec2::new(0.0, 0.2),
-        mq::Vec2::new(0.175, 0.15),
-        mq::Vec2::new(0.35, 0.0),
+        Vec2::new(-0.35, 0.0),
+        Vec2::new(-0.175, 0.15),
+        Vec2::new(0.0, 0.2),
+        Vec2::new(0.175, 0.15),
+        Vec2::new(0.35, 0.0),
     ];
 
     let color = render.theme.camera_color;
@@ -105,24 +104,24 @@ fn render_camera(render: &RenderState, gl: &mut mq::QuadGl, x: f32, y: f32) {
         render.theme.warp_thickness,
         color,
     );
-    mq::draw_circle(0.0, 0.0, 0.15, color);
+    draw_circle(0.0, 0.0, 0.15, color);
 
     gl.pop_model_matrix();
 }
 
-fn render_crystal_ball(render: &RenderState, gl: &mut mq::QuadGl, x: f32, y: f32) {
-    let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
-    let translation = mq::Vec3::new(x + 0.5, y + 0.5, 0.);
-    let rotation = mq::Quat::IDENTITY;
-    gl.push_model_matrix(mq::Mat4::from_scale_rotation_translation(
+fn render_crystal_ball(render: &RenderState, gl: &mut QuadGl, x: f32, y: f32) {
+    let scale = Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
+    let translation = Vec3::new(x + 0.5, y + 0.5, 0.);
+    let rotation = Quat::IDENTITY;
+    gl.push_model_matrix(Mat4::from_scale_rotation_translation(
         scale,
         rotation,
         translation,
     ));
 
     let color = render.theme.crystal_ball_color;
-    mq::draw_hexagon(0.0, 0.0, 0.4, 0.05, false, color, mq::WHITE);
-    mq::draw_circle_lines(0.0, 0.0, 0.3, 0.05, color);
+    draw_hexagon(0.0, 0.0, 0.4, 0.05, false, color, mq::WHITE);
+    draw_circle_lines(0.0, 0.0, 0.3, 0.05, color);
 
     gl.pop_model_matrix();
 }
@@ -130,7 +129,7 @@ fn render_crystal_ball(render: &RenderState, gl: &mut mq::QuadGl, x: f32, y: f32
 fn render_escalator(render: &RenderState, escalator: EscalatorLocation) {
     let [a, b] = escalator.0;
     let offset = CELL_HALF_WIDTH - GRID_HALF_WIDTH;
-    mq::draw_line(
+    draw_line(
         a.x() as f32 + offset,
         a.y() as f32 + offset,
         b.x() as f32 + offset,
@@ -143,7 +142,7 @@ fn render_escalator(render: &RenderState, escalator: EscalatorLocation) {
 #[allow(clippy::too_many_arguments)]
 fn render_final_exit(
     render: &RenderState,
-    gl: &mut mq::QuadGl,
+    gl: &mut QuadGl,
     x: f32,
     y: f32,
     pawn: Pawn,
@@ -151,17 +150,17 @@ fn render_final_exit(
     col_idx: usize,
     row_idx: usize,
 ) {
-    let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
+    let scale = Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
 
     let point = TileGridCoord::new(col_idx as u8, row_idx as u8)
         .expect("could not convert row/col idx to tile");
 
     // Z-axis goes "into" the screen since this is right-handed
     let angle = -tile.cell_exit_direction(point).as_angle();
-    let rotation = mq::Quat::from_rotation_z(angle);
+    let rotation = Quat::from_rotation_z(angle);
 
-    let translation = mq::Vec3::new(x + 0.5, y + 0.5, 0.);
-    gl.push_model_matrix(mq::Mat4::from_scale_rotation_translation(
+    let translation = Vec3::new(x + 0.5, y + 0.5, 0.);
+    gl.push_model_matrix(Mat4::from_scale_rotation_translation(
         scale,
         rotation,
         translation,
@@ -169,7 +168,7 @@ fn render_final_exit(
 
     let offset = 0.5 * render.theme.wall_thickness;
     let end = 1.0 - 2.0 * offset;
-    mq::draw_rectangle(
+    draw_rectangle(
         -0.5 + offset,
         -0.5 + offset,
         end,
@@ -184,8 +183,8 @@ fn render_final_exit(
     let arrowhead_halfwidth = 0.5 * arrowhead_width;
     let arrowhead_length = 0.25;
     let arrowhead_back_x = endpoint - arrowhead_length;
-    mq::draw_line(0.0, 0.0, endpoint, 0.0, thickness, color);
-    mq::draw_line(
+    draw_line(0.0, 0.0, endpoint, 0.0, thickness, color);
+    draw_line(
         endpoint,
         0.0,
         arrowhead_back_x,
@@ -193,7 +192,7 @@ fn render_final_exit(
         thickness,
         color,
     );
-    mq::draw_line(
+    draw_line(
         endpoint,
         0.0,
         arrowhead_back_x,
@@ -207,16 +206,16 @@ fn render_final_exit(
 
 fn render_wall(
     render: &RenderState,
-    a: mq::Vec2,
-    b: mq::Vec2,
+    a: Vec2,
+    b: Vec2,
     wall: WallState,
-    tile_bg_color: mq::Color,
+    tile_bg_color: Color,
 ) {
     if wall == WallState::OrangeOnly {
         let hole_halfwidth = 0.5 * render.theme.wall_orange_only_hole_width;
         let hole_a = a.lerp(b, 0.5 - hole_halfwidth);
         let hole_b = a.lerp(b, 0.5 + hole_halfwidth);
-        mq::draw_line(
+        draw_line(
             a.x,
             a.y,
             hole_a.x,
@@ -224,7 +223,7 @@ fn render_wall(
             render.theme.wall_thickness,
             render.theme.wall_orange_only_color,
         );
-        mq::draw_line(
+        draw_line(
             hole_b.x,
             hole_b.y,
             b.x,
@@ -233,7 +232,7 @@ fn render_wall(
             render.theme.wall_orange_only_color,
         );
     } else {
-        mq::draw_line(
+        draw_line(
             a.x,
             a.y,
             b.x,
@@ -245,17 +244,17 @@ fn render_wall(
 }
 
 impl Tile {
-    pub fn render(&self, pos: mq::Vec2, render: &RenderState) {
+    pub fn render(&self, pos: Vec2, render: &RenderState) {
         // SAFETY: must never call in child frame
         // Otherwise, there would be multiple mutable references to same data
-        let gl = unsafe { mq::get_internal_gl().quad_gl };
+        let gl = unsafe { get_internal_gl().quad_gl };
 
         let is_reachable_coord = self.reachable_coords();
 
-        let scale = mq::Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
-        let translation = mq::Vec3::new(pos.x, pos.y, 0.);
-        let rotation = mq::Quat::IDENTITY;
-        gl.push_model_matrix(mq::Mat4::from_scale_rotation_translation(
+        let scale = Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
+        let translation = Vec3::new(pos.x, pos.y, 0.);
+        let rotation = Quat::IDENTITY;
+        gl.push_model_matrix(Mat4::from_scale_rotation_translation(
             scale,
             rotation,
             translation,
@@ -266,7 +265,7 @@ impl Tile {
         } else {
             render.theme.tile_normal_bg_color
         };
-        mq::draw_rectangle(
+        draw_rectangle(
             -GRID_HALF_WIDTH,
             -GRID_HALF_WIDTH,
             GRID_WIDTH,
@@ -285,8 +284,8 @@ impl Tile {
                     if pred(wall) {
                         render_wall(
                             render,
-                            mq::Vec2::new(x, y),
-                            mq::Vec2::new(x + CELL_WIDTH, y),
+                            Vec2::new(x, y),
+                            Vec2::new(x + CELL_WIDTH, y),
                             wall,
                             tile_bg_color,
                         );
@@ -304,8 +303,8 @@ impl Tile {
                     if pred(wall) {
                         render_wall(
                             render,
-                            mq::Vec2::new(x, y),
-                            mq::Vec2::new(x, y + CELL_WIDTH),
+                            Vec2::new(x, y),
+                            Vec2::new(x, y + CELL_WIDTH),
                             wall,
                             tile_bg_color,
                         );
@@ -328,7 +327,7 @@ impl Tile {
 
                 let is_reachable = is_reachable_coord[row_idx][col_idx];
                 if !is_reachable {
-                    mq::draw_rectangle(x, y, 1.0, 1.0, render.theme.unreachable_cell_color);
+                    draw_rectangle(x, y, 1.0, 1.0, render.theme.unreachable_cell_color);
                 }
 
                 match cell {
@@ -356,3 +355,4 @@ impl Tile {
         gl.pop_model_matrix();
     }
 }
+*/

@@ -3,8 +3,6 @@ pub mod render_tile;
 pub mod shape;
 pub mod theme;
 
-use macroquad::prelude as mq;
-
 use crate::prelude::*;
 
 #[derive(Clone, Debug, Default)]
@@ -13,11 +11,11 @@ pub struct RenderState {
 }
 
 pub trait Render {
-    fn render(&self, pos: mq::Vec2, render: &RenderState);
+    fn render(&self, pos: Vec2, render: &RenderState);
 }
 
 impl WallState {
-    fn wall_color(self, render: &RenderState, tile_bg_color: mq::Color) -> mq::Color {
+    fn wall_color(self, render: &RenderState, tile_bg_color: Color) -> Color {
         match self {
             WallState::Explore(pawn) => pawn.as_color(render),
             WallState::Open => render.theme.wall_open_color,
@@ -29,7 +27,7 @@ impl WallState {
 }
 
 impl Pawn {
-    fn as_color(self, render: &RenderState) -> mq::Color {
+    fn as_color(self, render: &RenderState) -> Color {
         match self {
             Self::Green => render.theme.pawn_green_color,
             Self::Orange => render.theme.pawn_orange_color,
@@ -55,19 +53,21 @@ pub enum AlignHoriz {
     Right,
 }
 
-pub fn draw_text_align(text: &str, x: AlignHoriz, y: AlignVert, params: mq::TextParams) {
-    let dims = mq::measure_text(text, None, params.font_size, params.font_scale);
+/*
+pub fn draw_text_align(text: &str, x: AlignHoriz, y: AlignVert, params: TextParams) {
+    let dims = measure_text(text, None, params.font_size, params.font_scale);
     let x = match x {
         AlignHoriz::Absolute(x) => x,
         AlignHoriz::Left => 0.,
-        AlignHoriz::Center => (mq::screen_width() - dims.width) / 2.0,
-        AlignHoriz::Right => mq::screen_width() - dims.width,
+        AlignHoriz::Center => (screen_width() - dims.width) / 2.0,
+        AlignHoriz::Right => screen_width() - dims.width,
     };
     let y = match y {
         AlignVert::Absolute(y) => y,
         AlignVert::Top => dims.height,
-        AlignVert::Middle => (mq::screen_height() + dims.height) / 2.0,
-        AlignVert::Bottom => mq::screen_height() - dims.height,
+        AlignVert::Middle => (screen_height() + dims.height) / 2.0,
+        AlignVert::Bottom => screen_height() - dims.height,
     };
-    mq::draw_text_ex(text, x, y, params);
+    draw_text_ex(text, x, y, params);
 }
+*/

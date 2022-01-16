@@ -1,12 +1,13 @@
 use crate::prelude::*;
-use macroquad::prelude as mq;
+
+/*
 
 /// Zoom camera to fit rectangle while maintaining aspect ratio
 #[must_use]
-pub fn camera_zoom_to_fit(fit: mq::Rect) -> mq::Camera2D {
+pub fn camera_zoom_to_fit(fit: Rect) -> mq::Camera2D {
     let desired_aspect_ratio = fit.w / fit.h;
-    let screen_width = mq::screen_width();
-    let screen_height = mq::screen_height();
+    let screen_width = screen_width();
+    let screen_height = screen_height();
     let current_aspect_ratio = screen_width / screen_height;
     debug!("Fitting camera to {:?}", fit);
 
@@ -40,5 +41,7 @@ pub fn camera_zoom_to_fit(fit: mq::Rect) -> mq::Camera2D {
     }
 
     trace!("    x={}, y={}, w={}, h={}", x, y, w, h);
-    mq::Camera2D::from_display_rect(mq::Rect { x, y, w, h })
+    Camera2D::from_display_rect(mq::Rect { x, y, w, h })
 }
+
+*/
