@@ -9,8 +9,7 @@ use notify::Watcher;
 
 cfg_if! {
     if #[cfg(feature = "gui")] {
-        use m_mazing_core::macroquad::prelude as mq;
-        use m_mazing_core::macroquad;
+        use m_mazing_core::bevy::prelude::*;
 
         mod gui;
         use crate::gui::*;
@@ -39,7 +38,7 @@ pub struct Args {
 }
 
 fn init_logging(args: &Args) {
-    use log::{LevelFilter::*, *};
+    use log::LevelFilter::*;
 
     let levels = [Off, Error, Warn, Info, Debug, Trace];
     let level_count = 2 + args.verbose - args.quiet;
@@ -106,42 +105,14 @@ impl Ctx {
     }
 }
 
-#[cfg(not(feature = "gui"))]
-fn main() -> Result<()> {
-    let ctx = Ctx::new().with_context(|| "Failed to generate context")?;
-
-    init_logging(&ctx.args);
-
-    info!("tileset = {:#?}", ctx.tileset);
-
-    Ok(())
-}
-
 // todo: manual Window::new() to support anyhow::Result
-#[cfg(feature = "gui")]
-#[macroquad::main("M-Mazing Tile Util")]
-async fn main() -> Result<()> {
-    let mut ctx = Ctx::new()
-        .with_context(|| "Failed to generate context")
-        // bug: macroquad does not "forward" result to real main(), so unwrap() for now
-        .unwrap();
+fn main() -> Result<()> {
+    let mut ctx = Ctx::new().with_context(|| "Failed to generate context")?;
     let render = RenderState::default();
 
     init_logging(&ctx.args);
 
-    info!("tileset: {:#?}", ctx.tileset);
-
-    loop {
-        clear_background(render.theme.bg_color);
-
-        match update(&mut ctx) {
-            Continuation::Continue => (),
-            Continuation::Exit => break,
-        }
-        draw(&ctx, &render);
-
-        next_frame().await
-    }
+    println!("tileset: {:#?}", ctx.tileset);
 
     Ok(())
 }

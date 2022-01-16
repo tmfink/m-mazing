@@ -16,6 +16,7 @@ pub enum Continuation {
     Exit,
 }
 
+/*
 #[must_use]
 pub fn update(ctx: &mut Ctx) -> Continuation {
     if is_key_pressed(mq::KeyCode::Q) || mq::is_key_pressed(mq::KeyCode::Escape) {
@@ -135,3 +136,4 @@ pub fn draw(ctx: &Ctx, render: &RenderState) {
         },
     );
 }
+*/

@@ -20,6 +20,7 @@ pub mod prelude {
 cfg_if! {
     if #[cfg(feature = "gui")] {
         pub mod render;
+        pub use bevy;
         use bevy::prelude::*;
     }
 }
