@@ -165,7 +165,7 @@ pub fn spawn_tile(
     info!("spawning tile");
 
     if let Some(tile) = tile {
-        commands.entity(tile.id).despawn();
+        commands.entity(tile.id).despawn_recursive();
     }
 
     let (name, tile) = if let Some(item) = ctx.tileset.get(ctx.tile_idx as usize) {
