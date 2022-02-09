@@ -1,5 +1,8 @@
 use std::sync::mpsc::TryRecvError;
 
+use bevy::app::AppExit;
+use bevy::input::{keyboard::KeyboardInput, ElementState};
+
 use crate::*;
 
 const LEGEND: &str = "
@@ -11,22 +14,47 @@ R - reload;
 Home/End - start/end;
 ";
 
-pub enum Continuation {
-    Continue,
-    Exit,
+pub fn keyboard_input_system(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut app_exit_events: EventWriter<AppExit>,
+    mut should_refresh: ResMut<RefreshTile>,
+    mut ctx: ResMut<Ctx>,
+) {
+    if keyboard_input.any_pressed([KeyCode::Escape, KeyCode::Q]) {
+        app_exit_events.send(AppExit);
+    }
+
+    if keyboard_input.just_pressed(KeyCode::R) {
+        should_refresh.0 = true;
+    }
+
+    if keyboard_input.any_just_pressed([KeyCode::Right, KeyCode::Down]) {
+        ctx.tile_idx += 1;
+    }
+    if keyboard_input.any_just_pressed([KeyCode::Left, KeyCode::Up]) {
+        ctx.tile_idx -= 1;
+    }
+
+    // Avoid triggering change detection if unchanged
+    let new_tile_idx = ctx
+        .tile_idx
+        .checked_rem_euclid(ctx.tileset.len() as isize)
+        .unwrap_or(0);
+    if new_tile_idx != ctx.tile_idx {
+        ctx.tile_idx = new_tile_idx;
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Home) {
+        ctx.tile_idx = 0;
+    }
+    if keyboard_input.just_pressed(KeyCode::End) {
+        ctx.tile_idx = ctx.tileset.len() as isize - 1;
+    }
 }
 
-/*
-#[must_use]
-pub fn update(ctx: &mut Ctx) -> Continuation {
-    if is_key_pressed(mq::KeyCode::Q) || mq::is_key_pressed(mq::KeyCode::Escape) {
-        return Continuation::Exit;
-    }
+pub fn update(ctx: &mut Ctx) {
 
-    let mut should_refresh = false;
-    if is_key_pressed(mq::KeyCode::R) {
-        should_refresh = true
-    }
+    /*
     match ctx.notify_rx.try_recv() {
         Ok(Ok(event)) => {
             info!("new event {:?}", event);
@@ -43,25 +71,8 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
         }
     }
 
-    if is_key_pressed(mq::KeyCode::Right) || mq::is_key_pressed(mq::KeyCode::Down) {
-        ctx.tile_idx += 1;
-    }
-    if is_key_pressed(mq::KeyCode::Left) || mq::is_key_pressed(mq::KeyCode::Up) {
-        ctx.tile_idx -= 1;
-    }
-    ctx.tile_idx = ctx
-        .tile_idx
-        .checked_rem_euclid(ctx.tileset.len() as isize)
-        .unwrap_or(0);
-    if is_key_pressed(mq::KeyCode::Home) {
-        ctx.tile_idx = 0;
-    }
-    if is_key_pressed(mq::KeyCode::End) {
-        ctx.tile_idx = ctx.tileset.len() as isize - 1;
-    }
-    let tile = ctx.tileset.get_mut(ctx.tile_idx as usize);
 
-    if is_key_pressed(mq::KeyCode::K) || mq::is_key_pressed(mq::KeyCode::U) {
+    if keyboard_input.just_pressed(mq::KeyCode::K) || mq::keyboard_input.just_pressed(mq::KeyCode::U) {
         ctx.availability = match ctx.availability {
             CellItemAvailability::Available => CellItemAvailability::Used,
             CellItemAvailability::Used => CellItemAvailability::Available,
@@ -82,10 +93,10 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
         for cell in tile.cells_iter_mut() {
             cell.set_availability(ctx.availability);
         }
-        if is_key_pressed(mq::KeyCode::LeftBracket) {
+        if keyboard_input.just_pressed(mq::KeyCode::LeftBracket) {
             tile.rotate(SpinDirection::CounterClockwise);
         }
-        if is_key_pressed(mq::KeyCode::RightBracket) {
+        if keyboard_input.just_pressed(mq::KeyCode::RightBracket) {
             tile.rotate(SpinDirection::Clockwise);
         }
         ctx.text = format!(
@@ -96,19 +107,21 @@ pub fn update(ctx: &mut Ctx) -> Continuation {
         ctx.text = "no tile".to_string();
     }
 
-    if is_key_pressed(mq::KeyCode::P) {
+    if keyboard_input.just_pressed(mq::KeyCode::P) {
         println!("{:#?}", tile);
     }
 
     Continuation::Continue
+    */
 }
 
-pub fn draw(ctx: &Ctx, render: &RenderState) {
-    if let Some((_tile_name, tile)) = ctx.tileset.get(ctx.tile_idx as usize) {
-        tile.render(Vec2::default(), render);
-    }
+pub fn draw(ctx: NonSend<Ctx>, render: Res<RenderState>, mut commands: Commands) {
+    //if let Some((_tile_name, tile)) = ctx.tileset.get(ctx.tile_idx as usize) {
+    //    tile.render(Vec2::default(), &render, &mut commands);
+    //}
+
+    /*
     // screen space camera for text
-    set_default_camera();
     let (font_size, font_scale, font_scale_aspect) = camera_font_scale(render.theme.font_size);
     draw_text_align(
         &ctx.text,
@@ -135,5 +148,35 @@ pub fn draw(ctx: &Ctx, render: &RenderState) {
             font: Default::default(),
         },
     );
+    */
 }
-*/
+
+pub fn spawn_tile(
+    ctx: Res<Ctx>,
+    render: Res<RenderState>,
+    refresh: Res<RefreshTile>,
+    mut tile: Option<ResMut<CurrentTile>>,
+    mut commands: Commands,
+) {
+    if !(refresh.0 || ctx.is_changed()/* || tile.is_none() */) {
+        return;
+    }
+
+    info!("spawning tile");
+
+    if let Some(tile) = tile {
+        commands.entity(tile.id).despawn();
+    }
+
+    let (name, tile) = if let Some(item) = ctx.tileset.get(ctx.tile_idx as usize) {
+        item
+    } else {
+        return;
+    };
+
+    let tile = tile.clone();
+    let id = tile.spawn(Vec2::ZERO, &*render, &mut commands);
+
+    let new_tile = CurrentTile { id, tile };
+    commands.insert_resource(new_tile);
+}

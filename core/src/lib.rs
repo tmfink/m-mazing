@@ -13,14 +13,20 @@ pub mod prelude {
     pub use crate::*;
     pub use log::*;
 
-    #[cfg(feature = "gui")]
-    pub use crate::render::{camera::*, shape::*, theme::*, *};
+    cfg_if! {
+        if #[cfg(feature = "gui")] {
+            pub use crate::render::{camera::*, shape::*, theme::*, *};
+            pub use bevy_prototype_lyon::prelude::*;
+        }
+    }
 }
 
 cfg_if! {
     if #[cfg(feature = "gui")] {
-        pub mod render;
         pub use bevy;
+        pub use bevy_prototype_lyon;
+
+        pub mod render;
         use bevy::prelude::*;
     }
 }

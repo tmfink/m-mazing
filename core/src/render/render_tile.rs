@@ -242,37 +242,41 @@ fn render_wall(
         );
     }
 }
+*/
+
+#[derive(Component)]
+struct TileShape;
 
 impl Tile {
-    pub fn render(&self, pos: Vec2, render: &RenderState) {
-        // SAFETY: must never call in child frame
-        // Otherwise, there would be multiple mutable references to same data
-        let gl = unsafe { get_internal_gl().quad_gl };
-
+    pub fn spawn(&self, pos: Vec2, render: &RenderState, commands: &mut Commands) -> Entity {
         let is_reachable_coord = self.reachable_coords();
-
-        let scale = Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
-        let translation = Vec3::new(pos.x, pos.y, 0.);
-        let rotation = Quat::IDENTITY;
-        gl.push_model_matrix(Mat4::from_scale_rotation_translation(
-            scale,
-            rotation,
-            translation,
-        ));
 
         let tile_bg_color = if self.has_camera() {
             render.theme.tile_camera_bg_color
         } else {
             render.theme.tile_normal_bg_color
         };
-        draw_rectangle(
-            -GRID_HALF_WIDTH,
-            -GRID_HALF_WIDTH,
-            GRID_WIDTH,
-            GRID_WIDTH,
-            tile_bg_color,
-        );
 
+        let shape = shapes::Rectangle {
+            extents: Vec2::new(Self::CELL_GRID_WIDTH as f32, Self::CELL_GRID_WIDTH as f32),
+            origin: RectangleOrigin::Center,
+        };
+        let tile_entity = commands
+            .spawn_bundle(GeometryBuilder::build_as(
+                &shape,
+                DrawMode::Outlined {
+                    fill_mode: FillMode::color(tile_bg_color),
+                    outline_mode: StrokeMode::new(
+                        render.theme.wall_open_color,
+                        render.theme.wall_thickness,
+                    ),
+                },
+                Transform::default(),
+            ))
+            .insert(TileShape)
+            .id();
+
+        /*
         let render_walls = |pred: fn(WallState) -> bool| {
             // horizontal walls
             for (row_idx, row) in self.horz_walls().iter().enumerate() {
@@ -353,6 +357,8 @@ impl Tile {
         }
 
         gl.pop_model_matrix();
+        */
+
+        tile_entity
     }
 }
-*/

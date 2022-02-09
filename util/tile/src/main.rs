@@ -1,20 +1,18 @@
 use std::{fs::File, io::Read, path::PathBuf, sync::mpsc};
 
 use anyhow::{Context, Result};
-use cfg_if::cfg_if;
 use clap::Parser;
 
 use m_mazing_core::prelude::*;
 use notify::Watcher;
 
-cfg_if! {
-    if #[cfg(feature = "gui")] {
-        use m_mazing_core::bevy::prelude::*;
+use bevy::ecs as bevy_ecs;
+use bevy::prelude::*;
+use bevy::render::camera::ScalingMode;
+use m_mazing_core::bevy;
 
-        mod gui;
-        use crate::gui::*;
-    }
-}
+mod gui;
+use crate::gui::*;
 
 /// Utility to debug Tiles
 #[derive(Parser, Debug, Clone)]
@@ -53,6 +51,15 @@ fn init_logging(args: &Args) {
     info!("log verbosity: {:?}", level);
 }
 
+#[derive(Debug)]
+pub struct CurrentTile {
+    pub tile: Tile,
+    pub id: Entity,
+}
+
+#[derive(Debug, Default)]
+pub struct RefreshTile(pub bool);
+
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct Ctx {
@@ -60,9 +67,9 @@ pub struct Ctx {
     pub tileset: Vec<(String, Tile)>,
     pub tile_idx: isize,
     pub availability: CellItemAvailability,
-    pub text: String,
-    pub notify_rx: mpsc::Receiver<notify::Result<notify::Event>>,
-    pub notify_watcher: notify::RecommendedWatcher,
+    //pub text: String,
+    //pub notify_rx: mpsc::Receiver<notify::Result<notify::Event>>,
+    //pub notify_watcher: notify::RecommendedWatcher,
 }
 
 impl Ctx {
@@ -82,9 +89,9 @@ impl Ctx {
             tileset: Default::default(),
             tile_idx,
             availability: CellItemAvailability::Available,
-            text: String::new(),
-            notify_rx,
-            notify_watcher,
+            //text: String::new(),
+            //notify_rx,
+            //notify_watcher,
         };
 
         ctx.refresh()?;
@@ -105,14 +112,55 @@ impl Ctx {
     }
 }
 
+fn setup_system(mut commands: Commands) {
+    const CAMERA_EXTENT: f32 = 3.0;
+    let mut camera_bundle = OrthographicCameraBundle::new_2d();
+    camera_bundle.orthographic_projection.left = -CAMERA_EXTENT;
+    camera_bundle.orthographic_projection.right = CAMERA_EXTENT;
+    camera_bundle.orthographic_projection.top = CAMERA_EXTENT;
+    camera_bundle.orthographic_projection.bottom = -CAMERA_EXTENT;
+
+    // able to re-size window if pop out **after** moving window
+    camera_bundle.orthographic_projection.scaling_mode = ScalingMode::FixedVertical;
+
+    // hack to modify camera
+    camera_bundle.transform.scale = Vec3::new(3.0, 3.0, 1.0);
+
+    commands.spawn_bundle(camera_bundle);
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemLabel)]
+enum MySystemLabels {
+    FrameInit,
+    Input,
+}
+
+fn frame_init(mut refresh: ResMut<RefreshTile>) {
+    refresh.0 = false;
+}
+
+fn debug_system(query: Query<Entity>) {
+    info!("entities: {}", query.iter().count());
+}
+
 // todo: manual Window::new() to support anyhow::Result
 fn main() -> Result<()> {
-    let mut ctx = Ctx::new().with_context(|| "Failed to generate context")?;
-    let render = RenderState::default();
-
-    init_logging(&ctx.args);
+    let ctx = Ctx::new().with_context(|| "Failed to generate context")?;
 
     println!("tileset: {:#?}", ctx.tileset);
+
+    App::new()
+        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(ctx)
+        .init_resource::<RenderState>()
+        .insert_resource(RefreshTile(true))
+        .add_plugins(DefaultPlugins)
+        .add_plugin(ShapePlugin)
+        .add_startup_system(setup_system)
+        .add_system(frame_init.before(MySystemLabels::Input))
+        .add_system(keyboard_input_system.label(MySystemLabels::Input))
+        .add_system(spawn_tile.after(MySystemLabels::Input))
+        .run();
 
     Ok(())
 }
