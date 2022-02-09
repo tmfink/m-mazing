@@ -124,7 +124,7 @@ fn setup_system(mut commands: Commands) {
     camera_bundle.orthographic_projection.scaling_mode = ScalingMode::FixedVertical;
 
     // hack to modify camera
-    camera_bundle.transform.scale = Vec3::new(3.0, 3.0, 1.0);
+    camera_bundle.transform.scale = Vec3::new(3.0, -3.0, 1.0);
 
     commands.spawn_bundle(camera_bundle);
 }

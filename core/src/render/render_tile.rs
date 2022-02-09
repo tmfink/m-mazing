@@ -1,3 +1,5 @@
+use bevy::math::const_vec3;
+
 use crate::prelude::*;
 
 const GRID_WIDTH: f32 = Tile::CELL_GRID_WIDTH as f32;
@@ -203,6 +205,13 @@ fn render_final_exit(
 
     gl.pop_model_matrix();
 }
+*/
+
+const WALL_Z: f32 = 0.1;
+const WALL_TRANSFORM: Transform = Transform {
+    translation: const_vec3!([0., 0., WALL_Z]),
+    ..Transform::identity()
+};
 
 fn render_wall(
     render: &RenderState,
@@ -210,39 +219,32 @@ fn render_wall(
     b: Vec2,
     wall: WallState,
     tile_bg_color: Color,
+    commands: &mut Commands,
+    tile_entity: Entity,
 ) {
+    let mut builder = GeometryBuilder::new();
+    let color;
     if wall == WallState::OrangeOnly {
         let hole_halfwidth = 0.5 * render.theme.wall_orange_only_hole_width;
         let hole_a = a.lerp(b, 0.5 - hole_halfwidth);
         let hole_b = a.lerp(b, 0.5 + hole_halfwidth);
-        draw_line(
-            a.x,
-            a.y,
-            hole_a.x,
-            hole_a.y,
-            render.theme.wall_thickness,
-            render.theme.wall_orange_only_color,
-        );
-        draw_line(
-            hole_b.x,
-            hole_b.y,
-            b.x,
-            b.y,
-            render.theme.wall_thickness,
-            render.theme.wall_orange_only_color,
-        );
+        let line1 = shapes::Line(a, hole_a);
+        let line2 = shapes::Line(hole_b, b);
+        builder = builder.add(&line1).add(&line2);
+        color = render.theme.wall_orange_only_color;
     } else {
-        draw_line(
-            a.x,
-            a.y,
-            b.x,
-            b.y,
-            render.theme.wall_thickness,
-            wall.wall_color(render, tile_bg_color),
-        );
+        let line = shapes::Line(a, b);
+        builder = builder.add(&line);
+        color = wall.wall_color(render, tile_bg_color);
     }
+    let geo = commands
+        .spawn_bundle(builder.build(
+            DrawMode::Stroke(StrokeMode::new(color, render.theme.wall_thickness)),
+            WALL_TRANSFORM,
+        ))
+        .id();
+    commands.entity(tile_entity).push_children(&[geo]);
 }
-*/
 
 #[derive(Component)]
 struct TileShape;
@@ -264,20 +266,13 @@ impl Tile {
         let tile_entity = commands
             .spawn_bundle(GeometryBuilder::build_as(
                 &shape,
-                DrawMode::Outlined {
-                    fill_mode: FillMode::color(tile_bg_color),
-                    outline_mode: StrokeMode::new(
-                        render.theme.wall_open_color,
-                        render.theme.wall_thickness,
-                    ),
-                },
+                DrawMode::Fill(FillMode::color(tile_bg_color)),
                 Transform::default(),
             ))
             .insert(TileShape)
             .id();
 
-        /*
-        let render_walls = |pred: fn(WallState) -> bool| {
+        let render_walls = |pred: fn(WallState) -> bool, commands: &mut Commands| {
             // horizontal walls
             for (row_idx, row) in self.horz_walls().iter().enumerate() {
                 let row_idx = row_idx as f32;
@@ -292,6 +287,8 @@ impl Tile {
                             Vec2::new(x + CELL_WIDTH, y),
                             wall,
                             tile_bg_color,
+                            commands,
+                            tile_entity,
                         );
                     }
                 }
@@ -311,6 +308,8 @@ impl Tile {
                             Vec2::new(x, y + CELL_WIDTH),
                             wall,
                             tile_bg_color,
+                            commands,
+                            tile_entity,
                         );
                     }
                 }
@@ -318,9 +317,10 @@ impl Tile {
         };
 
         // Render open walls before other walls
-        render_walls(|wall| wall == WallState::Open);
-        render_walls(|wall| wall != WallState::Open);
+        render_walls(|wall| wall == WallState::Open, commands);
+        render_walls(|wall| wall != WallState::Open, commands);
 
+        /*
         // todo: render cells
         for (row_idx, row) in self.cell_grid().iter().enumerate() {
             let row_idx_float = row_idx as f32;
