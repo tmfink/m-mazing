@@ -71,3 +71,9 @@ pub fn draw_text_align(text: &str, x: AlignHoriz, y: AlignVert, params: TextPara
     draw_text_ex(text, x, y, params);
 }
 */
+
+fn polar_to_cartesian(radius: f32, angle_rads: f32) -> Vec2 {
+    let x = radius * angle_rads.cos();
+    let y = radius * angle_rads.sin();
+    Vec2::new(x, y)
+}

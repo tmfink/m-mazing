@@ -1,6 +1,6 @@
 use bevy::math::{const_vec2, const_vec3};
 
-use crate::prelude::*;
+use crate::{prelude::*, render::polar_to_cartesian};
 
 const GRID_WIDTH: f32 = Tile::CELL_GRID_WIDTH as f32;
 const GRID_HALF_WIDTH: f32 = 0.5 * GRID_WIDTH;
@@ -60,9 +60,16 @@ fn render_used_marker(render: &RenderState, x: f32, y: f32) {
     draw_line(x_left, y_top, x_right, y_bottom, thickness, color);
     draw_line(x_left, y_bottom, x_right, y_top, thickness, color);
 }
+*/
 
-fn render_warp(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
-    let center = Vec2::new(x + CELL_HALF_WIDTH, y + CELL_HALF_WIDTH);
+fn render_warp(
+    render: &RenderState,
+    location: Vec2,
+    pawn: Pawn,
+    commands: &mut Commands,
+    tile_entity: Entity,
+) {
+    let center = Vec2::new(CELL_HALF_WIDTH, CELL_HALF_WIDTH);
 
     const NUM_ANGLES: u32 = 8;
     const NUM_RADII: u32 = 24;
@@ -74,9 +81,22 @@ fn render_warp(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
     let points = angles
         .zip(radii)
         .map(|(angle, radius)| polar_to_cartesian(radius, angle) + center);
-    shape::draw_connected_line(points, render.theme.warp_thickness, pawn.as_color(render));
+
+    let builder = shape::draw_connected_line(points, GeometryBuilder::new());
+    let transform = Transform::from_translation(location.extend(CELL_ITEM_Z));
+    let geo = commands
+        .spawn_bundle(builder.build(
+            DrawMode::Stroke(StrokeMode::new(
+                pawn.as_color(render),
+                render.theme.warp_thickness,
+            )),
+            transform,
+        ))
+        .id();
+    commands.entity(tile_entity).push_children(&[geo]);
 }
 
+/*
 fn render_loot(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
     let x_left = x + 0.1 * CELL_WIDTH;
     let x_mid = x + 0.5 * CELL_WIDTH;
@@ -366,9 +386,9 @@ impl Tile {
                     TileCell::TimerFlip(_) => {
                         render_timer(render, Vec2::new(x, y), commands, tile_entity)
                     }
+                    TileCell::Warp(pawn) => render_warp(render, Vec2::new(x, y), pawn, commands, tile_entity),
                     _ => (),
                     /*
-                    TileCell::Warp(pawn) => render_warp(render, x, y, pawn),
                     TileCell::Loot(pawn) => render_loot(render, x, y, pawn),
                     TileCell::FinalExit(pawn) => {
                         render_final_exit(render, gl, x, y, pawn, self, col_idx, row_idx)
