@@ -124,16 +124,14 @@ fn render_loot(
     commands.entity(tile_entity).push_children(&[entity]);
 }
 
-/*
-fn render_camera(render: &RenderState, gl: &mut QuadGl, x: f32, y: f32) {
-    let scale = Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
-    let translation = Vec3::new(x + 0.5, y + 0.5, 0.);
-    let rotation = Quat::IDENTITY;
-    gl.push_model_matrix(Mat4::from_scale_rotation_translation(
-        scale,
-        rotation,
-        translation,
-    ));
+fn render_camera(
+    render: &RenderState,
+    location: Vec2,
+    commands: &mut Commands,
+    tile_entity: Entity,
+) {
+    let translation = (location + Vec2::new(0.5, 0.5)).extend(CELL_ITEM_Z);
+    let transform = Transform::from_translation(translation);
 
     let points = [
         Vec2::new(-0.35, 0.0),
@@ -143,21 +141,34 @@ fn render_camera(render: &RenderState, gl: &mut QuadGl, x: f32, y: f32) {
         Vec2::new(0.35, 0.0),
     ];
 
-    let color = render.theme.camera_color;
-    shape::draw_connected_line(points.iter().copied(), render.theme.warp_thickness, color);
-    shape::draw_connected_line(
+    let mut builder = GeometryBuilder::new();
+    builder = shape::draw_connected_line(points.iter().copied(), builder);
+    builder = shape::draw_connected_line(
         points.iter().copied().map(|mut v| {
             v.y *= -1.0;
             v
         }),
-        render.theme.warp_thickness,
-        color,
+        builder,
     );
-    draw_circle(0.0, 0.0, 0.15, color);
+    // seems to be renderd as a diamond
+    builder = builder.add(&shapes::Circle {
+        center: Vec2::ZERO,
+        radius: 0.15,
+    });
 
-    gl.pop_model_matrix();
+    let entity = commands
+        .spawn_bundle(builder.build(
+            DrawMode::Stroke(StrokeMode::new(
+                render.theme.camera_color,
+                render.theme.warp_thickness,
+            )),
+            transform,
+        ))
+        .id();
+    commands.entity(tile_entity).push_children(&[entity]);
 }
 
+/*
 fn render_crystal_ball(render: &RenderState, gl: &mut QuadGl, x: f32, y: f32) {
     let scale = Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
     let translation = Vec3::new(x + 0.5, y + 0.5, 0.);
@@ -405,9 +416,11 @@ impl Tile {
                         commands,
                         tile_entity,
                     ),
+                    TileCell::Camera(_) => {
+                        render_camera(render, cell_location, commands, tile_entity)
+                    }
                     _ => (),
                     /*
-                    TileCell::Camera(_) => render_camera(render, gl, x, y),
                     TileCell::CrystalBall(_) => render_crystal_ball(render, gl, x, y),
                     TileCell::Empty => (),
                     */
