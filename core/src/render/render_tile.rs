@@ -96,29 +96,34 @@ fn render_warp(
     commands.entity(tile_entity).push_children(&[geo]);
 }
 
-/*
-fn render_loot(render: &RenderState, x: f32, y: f32, pawn: Pawn) {
-    let x_left = x + 0.1 * CELL_WIDTH;
-    let x_mid = x + 0.5 * CELL_WIDTH;
-    let x_right = x + 0.9 * CELL_WIDTH;
-    let y_top = y + 0.1 * CELL_WIDTH;
-    let y_mid = y + 0.5 * CELL_WIDTH;
-    let y_bottom = y + 0.9 * CELL_WIDTH;
-
-    let points = [
-        Vec2::new(x_right, y_mid),
-        Vec2::new(x_mid, y_top),
-        Vec2::new(x_left, y_mid),
-        Vec2::new(x_mid, y_bottom),
-        Vec2::new(x_right, y_mid),
-    ];
-    shape::draw_connected_line(
-        points.iter().copied(),
-        render.theme.wall_thickness,
-        pawn.as_color(render),
-    );
+fn render_loot(
+    render: &RenderState,
+    location: Vec2,
+    pawn: Pawn,
+    commands: &mut Commands,
+    tile_entity: Entity,
+) {
+    let shape = shapes::Rectangle {
+        extents: Vec2::new(0.5, 0.5),
+        origin: RectangleOrigin::Center,
+    };
+    let rot = Quat::from_rotation_z(std::f32::consts::FRAC_PI_4);
+    let translation = (location + Vec2::new(0.5, 0.5)).extend(CELL_ITEM_Z);
+    let transform = Transform::from_rotation(rot).with_translation(translation);
+    let entity = commands
+        .spawn_bundle(GeometryBuilder::build_as(
+            &shape,
+            DrawMode::Stroke(StrokeMode::new(
+                pawn.as_color(render),
+                render.theme.wall_thickness,
+            )),
+            transform,
+        ))
+        .id();
+    commands.entity(tile_entity).push_children(&[entity]);
 }
 
+/*
 fn render_camera(render: &RenderState, gl: &mut QuadGl, x: f32, y: f32) {
     let scale = Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
     let translation = Vec3::new(x + 0.5, y + 0.5, 0.);
@@ -382,14 +387,19 @@ impl Tile {
                         .push_children(&[covered_cell_id]);
                 }
 
+                let cell_location = Vec2::new(x, y);
                 match cell {
                     TileCell::TimerFlip(_) => {
-                        render_timer(render, Vec2::new(x, y), commands, tile_entity)
+                        render_timer(render, cell_location, commands, tile_entity)
                     }
-                    TileCell::Warp(pawn) => render_warp(render, Vec2::new(x, y), pawn, commands, tile_entity),
+                    TileCell::Warp(pawn) => {
+                        render_warp(render, cell_location, pawn, commands, tile_entity)
+                    }
+                    TileCell::Loot(pawn) => {
+                        render_loot(render, cell_location, pawn, commands, tile_entity)
+                    }
                     _ => (),
                     /*
-                    TileCell::Loot(pawn) => render_loot(render, x, y, pawn),
                     TileCell::FinalExit(pawn) => {
                         render_final_exit(render, gl, x, y, pawn, self, col_idx, row_idx)
                     }
