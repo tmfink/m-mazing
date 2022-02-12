@@ -13,6 +13,7 @@ const WALL_TRANSFORM: Transform = Transform {
     ..Transform::identity()
 };
 
+const CELL_BG_Z: f32 = 0.5 * (WALL_Z + CELL_ITEM_Z);
 const CELL_ITEM_Z: f32 = 0.2;
 
 fn render_timer(
@@ -186,72 +187,68 @@ fn render_escalator(render: &RenderState, escalator: EscalatorLocation) {
         render.theme.escalator_color,
     );
 }
+*/
 
 #[allow(clippy::too_many_arguments)]
 fn render_final_exit(
     render: &RenderState,
-    gl: &mut QuadGl,
-    x: f32,
-    y: f32,
+    location: Vec2,
     pawn: Pawn,
     tile: &Tile,
     col_idx: usize,
     row_idx: usize,
+    commands: &mut Commands,
+    tile_entity: Entity,
 ) {
-    let scale = Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
-
     let point = TileGridCoord::new(col_idx as u8, row_idx as u8)
         .expect("could not convert row/col idx to tile");
 
-    // Z-axis goes "into" the screen since this is right-handed
     let angle = -tile.cell_exit_direction(point).as_angle();
     let rotation = Quat::from_rotation_z(angle);
+    let translation = (location + Vec2::new(0.5, 0.5)).extend(CELL_BG_Z);
+    let transform = Transform::from_rotation(rotation).with_translation(translation);
 
-    let translation = Vec3::new(x + 0.5, y + 0.5, 0.);
-    gl.push_model_matrix(Mat4::from_scale_rotation_translation(
-        scale,
-        rotation,
-        translation,
-    ));
+    let width = 1.0 - render.theme.wall_thickness;
+    let bg_square = shapes::Rectangle {
+        extents: Vec2::new(width, width),
+        origin: RectangleOrigin::Center,
+    };
+    let bg_square = commands
+        .spawn_bundle(GeometryBuilder::build_as(
+            &bg_square,
+            DrawMode::Fill(FillMode::color(pawn.as_color(render))),
+            transform,
+        ))
+        .id();
+    commands.entity(tile_entity).push_children(&[bg_square]);
 
-    let offset = 0.5 * render.theme.wall_thickness;
-    let end = 1.0 - 2.0 * offset;
-    draw_rectangle(
-        -0.5 + offset,
-        -0.5 + offset,
-        end,
-        end,
-        pawn.as_color(render),
-    );
+    let arrow_tail = Vec2::new(0.0, 0.0);
+    let arrow_head = Vec2::new(0.5 - 0.5 * render.theme.wall_thickness, 0.0);
+    let head_width = 0.3;
+    let head_halfwidth = 0.5 * head_width;
+    let head_length = 0.25;
 
-    let color = render.theme.final_exit_arrow_color;
-    let thickness = render.theme.warp_thickness;
-    let endpoint = 0.5 - 2.0 * offset;
-    let arrowhead_width = 0.3;
-    let arrowhead_halfwidth = 0.5 * arrowhead_width;
-    let arrowhead_length = 0.25;
-    let arrowhead_back_x = endpoint - arrowhead_length;
-    draw_line(0.0, 0.0, endpoint, 0.0, thickness, color);
-    draw_line(
-        endpoint,
-        0.0,
-        arrowhead_back_x,
-        -arrowhead_halfwidth,
-        thickness,
-        color,
-    );
-    draw_line(
-        endpoint,
-        0.0,
-        arrowhead_back_x,
-        arrowhead_halfwidth,
-        thickness,
-        color,
-    );
-
-    gl.pop_model_matrix();
+    let arrow_builder = GeometryBuilder::new()
+        .add(&shapes::Line(arrow_tail, arrow_head))
+        .add(&shapes::Line(
+            arrow_head,
+            arrow_head + Vec2::new(-head_length, head_halfwidth),
+        ))
+        .add(&shapes::Line(
+            arrow_head,
+            arrow_head + Vec2::new(-head_length, -head_halfwidth),
+        ));
+    let arrow = commands
+        .spawn_bundle(arrow_builder.build(
+            DrawMode::Stroke(StrokeMode::new(
+                render.theme.final_exit_arrow_color,
+                render.theme.warp_thickness,
+            )),
+            transform,
+        ))
+        .id();
+    commands.entity(tile_entity).push_children(&[arrow]);
 }
-*/
 
 fn render_wall(
     render: &RenderState,
@@ -398,11 +395,18 @@ impl Tile {
                     TileCell::Loot(pawn) => {
                         render_loot(render, cell_location, pawn, commands, tile_entity)
                     }
+                    TileCell::FinalExit(pawn) => render_final_exit(
+                        render,
+                        cell_location,
+                        pawn,
+                        self,
+                        col_idx,
+                        row_idx,
+                        commands,
+                        tile_entity,
+                    ),
                     _ => (),
                     /*
-                    TileCell::FinalExit(pawn) => {
-                        render_final_exit(render, gl, x, y, pawn, self, col_idx, row_idx)
-                    }
                     TileCell::Camera(_) => render_camera(render, gl, x, y),
                     TileCell::CrystalBall(_) => render_crystal_ball(render, gl, x, y),
                     TileCell::Empty => (),
