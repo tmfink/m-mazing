@@ -1,4 +1,4 @@
-use bevy::math::const_vec3;
+use bevy::math::{const_vec2, const_vec3};
 
 use crate::prelude::*;
 
@@ -7,27 +7,48 @@ const GRID_HALF_WIDTH: f32 = 0.5 * GRID_WIDTH;
 const CELL_WIDTH: f32 = 1.0;
 const CELL_HALF_WIDTH: f32 = 0.5 * CELL_WIDTH;
 
-/*
-fn render_timer(render: &RenderState, x: f32, y: f32) {
-    let x_left = x + 0.25 * CELL_WIDTH;
-    let x_right = x + 0.75 * CELL_WIDTH;
-    let y_top = y + 0.2 * CELL_WIDTH;
-    let y_bottom = y + 0.8 * CELL_WIDTH;
+const WALL_Z: f32 = 0.1;
+const WALL_TRANSFORM: Transform = Transform {
+    translation: const_vec3!([0., 0., WALL_Z]),
+    ..Transform::identity()
+};
 
-    let points = [
-        Vec2::new(x_left, y_top),
-        Vec2::new(x_right, y_top),
-        Vec2::new(x_left, y_bottom),
-        Vec2::new(x_right, y_bottom),
-        Vec2::new(x_left, y_top),
+const CELL_ITEM_Z: f32 = 0.2;
+
+fn render_timer(
+    render: &RenderState,
+    location: Vec2,
+    commands: &mut Commands,
+    tile_entity: Entity,
+) {
+    const X_LEFT: f32 = 0.25;
+    const X_RIGHT: f32 = 0.75;
+    const Y_TOP: f32 = 0.2;
+    const Y_BOTTOM: f32 = 0.8;
+
+    const TILE_POINTS: [Vec2; 5] = [
+        const_vec2!([X_LEFT, Y_TOP]),
+        const_vec2!([X_RIGHT, Y_TOP]),
+        const_vec2!([X_LEFT, Y_BOTTOM]),
+        const_vec2!([X_RIGHT, Y_BOTTOM]),
+        const_vec2!([X_LEFT, Y_TOP]),
     ];
-    shape::draw_connected_line(
-        points.iter().copied(),
-        render.theme.wall_thickness,
-        render.theme.timer_color,
-    );
+
+    let builder = shape::draw_connected_line(TILE_POINTS.iter().copied(), GeometryBuilder::new());
+    let transform = Transform::from_translation(location.extend(CELL_ITEM_Z));
+    let geo = commands
+        .spawn_bundle(builder.build(
+            DrawMode::Stroke(StrokeMode::new(
+                render.theme.timer_color,
+                render.theme.wall_thickness,
+            )),
+            transform,
+        ))
+        .id();
+    commands.entity(tile_entity).push_children(&[geo]);
 }
 
+/*
 fn render_used_marker(render: &RenderState, x: f32, y: f32) {
     let x_left = x + 0.1;
     let x_right = x + 0.9;
@@ -207,12 +228,6 @@ fn render_final_exit(
 }
 */
 
-const WALL_Z: f32 = 0.1;
-const WALL_TRANSFORM: Transform = Transform {
-    translation: const_vec3!([0., 0., WALL_Z]),
-    ..Transform::identity()
-};
-
 fn render_wall(
     render: &RenderState,
     a: Vec2,
@@ -320,7 +335,6 @@ impl Tile {
         render_walls(|wall| wall == WallState::Open, commands);
         render_walls(|wall| wall != WallState::Open, commands);
 
-        /*
         // todo: render cells
         for (row_idx, row) in self.cell_grid().iter().enumerate() {
             let row_idx_float = row_idx as f32;
@@ -331,11 +345,29 @@ impl Tile {
 
                 let is_reachable = is_reachable_coord[row_idx][col_idx];
                 if !is_reachable {
-                    draw_rectangle(x, y, 1.0, 1.0, render.theme.unreachable_cell_color);
+                    let covered_cell = shapes::Rectangle {
+                        extents: Vec2::new(1., 1.),
+                        // this looks like TopLeft, but we are flipping the Y axis in the camera right now
+                        origin: RectangleOrigin::BottomLeft,
+                    };
+                    let covered_cell_id = commands
+                        .spawn_bundle(GeometryBuilder::build_as(
+                            &covered_cell,
+                            DrawMode::Fill(FillMode::color(render.theme.unreachable_cell_color)),
+                            Transform::from_xyz(x, y, CELL_ITEM_Z),
+                        ))
+                        .id();
+                    commands
+                        .entity(tile_entity)
+                        .push_children(&[covered_cell_id]);
                 }
 
                 match cell {
-                    TileCell::TimerFlip(_) => render_timer(render, x, y),
+                    TileCell::TimerFlip(_) => {
+                        render_timer(render, Vec2::new(x, y), commands, tile_entity)
+                    }
+                    _ => (),
+                    /*
                     TileCell::Warp(pawn) => render_warp(render, x, y, pawn),
                     TileCell::Loot(pawn) => render_loot(render, x, y, pawn),
                     TileCell::FinalExit(pawn) => {
@@ -344,14 +376,18 @@ impl Tile {
                     TileCell::Camera(_) => render_camera(render, gl, x, y),
                     TileCell::CrystalBall(_) => render_crystal_ball(render, gl, x, y),
                     TileCell::Empty => (),
+                    */
                 }
 
+                /*
                 if cell.is_used() {
                     render_used_marker(render, x, y);
                 }
+                */
             }
         }
 
+        /*
         for escalator in self.escalators() {
             render_escalator(render, *escalator);
         }

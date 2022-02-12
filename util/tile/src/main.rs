@@ -160,6 +160,7 @@ fn main() -> Result<()> {
         .add_system(frame_init.before(MySystemLabels::Input))
         .add_system(keyboard_input_system.label(MySystemLabels::Input))
         .add_system(spawn_tile.after(MySystemLabels::Input))
+        .add_system(debug_system)
         .run();
 
     Ok(())
