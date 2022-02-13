@@ -168,24 +168,44 @@ fn render_camera(
     commands.entity(tile_entity).push_children(&[entity]);
 }
 
-/*
-fn render_crystal_ball(render: &RenderState, gl: &mut QuadGl, x: f32, y: f32) {
-    let scale = Vec3::new(CELL_WIDTH, CELL_WIDTH, 1.);
-    let translation = Vec3::new(x + 0.5, y + 0.5, 0.);
-    let rotation = Quat::IDENTITY;
-    gl.push_model_matrix(Mat4::from_scale_rotation_translation(
-        scale,
-        rotation,
-        translation,
-    ));
+fn render_crystal_ball(
+    render: &RenderState,
+    location: Vec2,
+    commands: &mut Commands,
+    tile_entity: Entity,
+) {
+    let translation = (location + Vec2::new(0.5, 0.5)).extend(CELL_ITEM_Z);
+    let transform = Transform::from_translation(translation);
+    let draw_mode = DrawMode::Outlined {
+        fill_mode: FillMode::color(Color::WHITE),
+        outline_mode: StrokeMode::new(render.theme.crystal_ball_color, 0.05),
+    };
 
-    let color = render.theme.crystal_ball_color;
-    draw_hexagon(0.0, 0.0, 0.4, 0.05, false, color, mq::WHITE);
-    draw_circle_lines(0.0, 0.0, 0.3, 0.05, color);
+    let hexagon = shapes::RegularPolygon {
+        sides: 6,
+        center: Vec2::ZERO,
+        feature: shapes::RegularPolygonFeature::Radius(0.4),
+    };
+    let hexagon = commands
+        .spawn_bundle(GeometryBuilder::build_as(&hexagon, draw_mode, transform))
+        .id();
+    commands.entity(tile_entity).push_children(&[hexagon]);
 
-    gl.pop_model_matrix();
+    let circle = shapes::Circle {
+        center: Vec2::ZERO,
+        radius: 0.3,
+    };
+    let circle = commands
+        .spawn_bundle(GeometryBuilder::build_as(
+            &circle,
+            draw_mode,
+            Transform::from_translation(Vec3::new(0.0, 0.0, 0.1)),
+        ))
+        .id();
+    commands.entity(hexagon).push_children(&[circle]);
 }
 
+/*
 fn render_escalator(render: &RenderState, escalator: EscalatorLocation) {
     let [a, b] = escalator.0;
     let offset = CELL_HALF_WIDTH - GRID_HALF_WIDTH;
@@ -419,11 +439,10 @@ impl Tile {
                     TileCell::Camera(_) => {
                         render_camera(render, cell_location, commands, tile_entity)
                     }
-                    _ => (),
-                    /*
-                    TileCell::CrystalBall(_) => render_crystal_ball(render, gl, x, y),
+                    TileCell::CrystalBall(_) => {
+                        render_crystal_ball(render, cell_location, commands, tile_entity)
+                    }
                     TileCell::Empty => (),
-                    */
                 }
 
                 /*
