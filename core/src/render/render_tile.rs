@@ -16,6 +16,7 @@ const WALL_TRANSFORM: Transform = Transform {
 const CELL_BG_Z: f32 = 0.5 * (WALL_Z + CELL_ITEM_Z);
 const CELL_ITEM_Z: f32 = 0.2;
 const CELL_MARKER_Z: f32 = 0.3;
+const ESCALATOR_Z: f32 = 0.4;
 
 fn render_timer(
     render: &RenderState,
@@ -225,20 +226,30 @@ fn render_crystal_ball(
     commands.entity(hexagon).push_children(&[circle]);
 }
 
-/*
-fn render_escalator(render: &RenderState, escalator: EscalatorLocation) {
+fn render_escalator(
+    render: &RenderState,
+    escalator: EscalatorLocation,
+    commands: &mut Commands,
+    tile_entity: Entity,
+) {
     let [a, b] = escalator.0;
     let offset = CELL_HALF_WIDTH - GRID_HALF_WIDTH;
-    draw_line(
-        a.x() as f32 + offset,
-        a.y() as f32 + offset,
-        b.x() as f32 + offset,
-        b.y() as f32 + offset,
-        render.theme.escalator_thickness,
-        render.theme.escalator_color,
-    );
+    let transform = Transform::from_xyz(offset, offset, ESCALATOR_Z);
+    let entity = commands
+        .spawn_bundle(GeometryBuilder::build_as(
+            &shapes::Line(
+                Vec2::new(a.x() as f32, a.y() as f32),
+                Vec2::new(b.x() as f32, b.y() as f32),
+            ),
+            DrawMode::Stroke(StrokeMode::new(
+                render.theme.escalator_color,
+                render.theme.escalator_thickness,
+            )),
+            transform,
+        ))
+        .id();
+    commands.entity(tile_entity).push_children(&[entity]);
 }
-*/
 
 #[allow(clippy::too_many_arguments)]
 fn render_final_exit(
@@ -355,7 +366,7 @@ impl Tile {
             .spawn_bundle(GeometryBuilder::build_as(
                 &shape,
                 DrawMode::Fill(FillMode::color(tile_bg_color)),
-                Transform::default(),
+                Transform::from_translation(pos.extend(0.0)),
             ))
             .insert(TileShape)
             .id();
@@ -471,13 +482,9 @@ impl Tile {
             }
         }
 
-        /*
         for escalator in self.escalators() {
-            render_escalator(render, *escalator);
+            render_escalator(render, *escalator, commands, tile_entity);
         }
-
-        gl.pop_model_matrix();
-        */
 
         tile_entity
     }
