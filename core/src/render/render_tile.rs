@@ -15,6 +15,7 @@ const WALL_TRANSFORM: Transform = Transform {
 
 const CELL_BG_Z: f32 = 0.5 * (WALL_Z + CELL_ITEM_Z);
 const CELL_ITEM_Z: f32 = 0.2;
+const CELL_MARKER_Z: f32 = 0.3;
 
 fn render_timer(
     render: &RenderState,
@@ -49,19 +50,38 @@ fn render_timer(
     commands.entity(tile_entity).push_children(&[geo]);
 }
 
-/*
-fn render_used_marker(render: &RenderState, x: f32, y: f32) {
-    let x_left = x + 0.1;
-    let x_right = x + 0.9;
-    let y_top = y + 0.1;
-    let y_bottom = y + 0.9;
+fn render_used_marker(
+    render: &RenderState,
+    location: Vec2,
+    commands: &mut Commands,
+    tile_entity: Entity,
+) {
+    let x_left = 0.1;
+    let x_right = 0.9;
+    let y_top = 0.1;
+    let y_bottom = 0.9;
 
-    let thickness = render.theme.used_marker_thickness;
-    let color = render.theme.used_marker_color;
-    draw_line(x_left, y_top, x_right, y_bottom, thickness, color);
-    draw_line(x_left, y_bottom, x_right, y_top, thickness, color);
+    let builder = GeometryBuilder::new()
+        .add(&shapes::Line(
+            Vec2::new(x_left, y_top),
+            Vec2::new(x_right, y_bottom),
+        ))
+        .add(&shapes::Line(
+            Vec2::new(x_left, y_bottom),
+            Vec2::new(x_right, y_top),
+        ));
+    let transform = Transform::from_translation(location.extend(CELL_MARKER_Z));
+    let geo = commands
+        .spawn_bundle(builder.build(
+            DrawMode::Stroke(StrokeMode::new(
+                render.theme.used_marker_color,
+                render.theme.used_marker_thickness,
+            )),
+            transform,
+        ))
+        .id();
+    commands.entity(tile_entity).push_children(&[geo]);
 }
-*/
 
 fn render_warp(
     render: &RenderState,
@@ -445,11 +465,9 @@ impl Tile {
                     TileCell::Empty => (),
                 }
 
-                /*
                 if cell.is_used() {
-                    render_used_marker(render, x, y);
+                    render_used_marker(render, cell_location, commands, tile_entity);
                 }
-                */
             }
         }
 

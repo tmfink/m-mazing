@@ -19,6 +19,8 @@ pub fn keyboard_input_system(
     mut app_exit_events: EventWriter<AppExit>,
     mut should_refresh: ResMut<RefreshTile>,
     mut ctx: ResMut<Ctx>,
+    mut tile: Option<ResMut<CurrentTile>>,
+    mut availability: ResMut<TileAvailability>,
 ) {
     if keyboard_input.any_pressed([KeyCode::Escape, KeyCode::Q]) {
         app_exit_events.send(AppExit);
@@ -49,6 +51,16 @@ pub fn keyboard_input_system(
     }
     if keyboard_input.just_pressed(KeyCode::End) {
         ctx.tile_idx = ctx.tileset.len() as isize - 1;
+    }
+
+    if keyboard_input.any_just_pressed([KeyCode::K, KeyCode::U]) {
+        if let Some(mut tile) = tile {
+            availability.0 = match availability.0 {
+                CellItemAvailability::Available => CellItemAvailability::Used,
+                CellItemAvailability::Used => CellItemAvailability::Available,
+            };
+            info!("availability = {:?}", availability.0);
+        }
     }
 }
 
@@ -153,12 +165,13 @@ pub fn draw(ctx: NonSend<Ctx>, render: Res<RenderState>, mut commands: Commands)
 
 pub fn spawn_tile(
     ctx: Res<Ctx>,
+    availability: Res<TileAvailability>,
     render: Res<RenderState>,
     refresh: Res<RefreshTile>,
-    mut tile: Option<ResMut<CurrentTile>>,
+    tile: Option<ResMut<CurrentTile>>,
     mut commands: Commands,
 ) {
-    if !(refresh.0 || ctx.is_changed()/* || tile.is_none() */) {
+    if !(refresh.0 || ctx.is_changed() || availability.is_changed()) {
         return;
     }
 
@@ -168,13 +181,17 @@ pub fn spawn_tile(
         commands.entity(tile.id).despawn_recursive();
     }
 
-    let (name, tile) = if let Some(item) = ctx.tileset.get(ctx.tile_idx as usize) {
+    let (_name, tile) = if let Some(item) = ctx.tileset.get(ctx.tile_idx as usize) {
         item
     } else {
         return;
     };
 
-    let tile = tile.clone();
+    let mut tile = tile.clone();
+    for cell in tile.cells_iter_mut() {
+        cell.set_availability(availability.0);
+    }
+
     let id = tile.spawn(Vec2::ZERO, &*render, &mut commands);
 
     let new_tile = CurrentTile { id, tile };

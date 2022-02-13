@@ -66,10 +66,18 @@ pub struct Ctx {
     pub args: Args,
     pub tileset: Vec<(String, Tile)>,
     pub tile_idx: isize,
-    pub availability: CellItemAvailability,
     //pub text: String,
     //pub notify_rx: mpsc::Receiver<notify::Result<notify::Event>>,
     //pub notify_watcher: notify::RecommendedWatcher,
+}
+
+#[derive(Debug)]
+pub struct TileAvailability(pub CellItemAvailability);
+
+impl Default for TileAvailability {
+    fn default() -> Self {
+        Self(CellItemAvailability::Available)
+    }
 }
 
 impl Ctx {
@@ -88,7 +96,6 @@ impl Ctx {
             args,
             tileset: Default::default(),
             tile_idx,
-            availability: CellItemAvailability::Available,
             //text: String::new(),
             //notify_rx,
             //notify_watcher,
@@ -133,6 +140,7 @@ fn setup_system(mut commands: Commands) {
 enum MySystemLabels {
     FrameInit,
     Input,
+    SpawnTile,
 }
 
 fn frame_init(mut refresh: ResMut<RefreshTile>) {
@@ -153,14 +161,19 @@ fn main() -> Result<()> {
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(ctx)
         .init_resource::<RenderState>()
+        .init_resource::<TileAvailability>()
         .insert_resource(RefreshTile(true))
         .add_plugins(DefaultPlugins)
         .add_plugin(ShapePlugin)
         .add_startup_system(setup_system)
         .add_system(frame_init.before(MySystemLabels::Input))
         .add_system(keyboard_input_system.label(MySystemLabels::Input))
-        .add_system(spawn_tile.after(MySystemLabels::Input))
-        .add_system(debug_system)
+        .add_system(
+            spawn_tile
+                .label(MySystemLabels::SpawnTile)
+                .after(MySystemLabels::Input),
+        )
+        //.add_system(debug_system)
         .run();
 
     Ok(())
