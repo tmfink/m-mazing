@@ -19,6 +19,10 @@ pub fn keyboard_input_system(
 
     if keyboard_input.just_pressed(KeyCode::R) {
         should_refresh.0 = true;
+        match ctx.refresh() {
+            Ok(()) => info!("Manually reloading"),
+            Err(err) => error!("failed to reload: {:#}", err),
+        }
     }
 
     if keyboard_input.any_just_pressed([KeyCode::Right, KeyCode::Down]) {
@@ -74,13 +78,6 @@ pub fn update(ctx: &mut Ctx) {
         Err(TryRecvError::Empty) => (),
         Err(TryRecvError::Disconnected) => error!("Notify disconnected"),
     }
-    if should_refresh {
-        match ctx.refresh() {
-            Ok(()) => info!("Refreshed ctx"),
-            Err(err) => error!("Failed to refresh: {:#}", err),
-        }
-    }
-
 
     // todo: smarter fit rect for all tiles
     let fit_rect = Rect {
