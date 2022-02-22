@@ -1,7 +1,6 @@
 use std::sync::mpsc::TryRecvError;
 
 use bevy::app::AppExit;
-use bevy::input::{keyboard::KeyboardInput, ElementState};
 
 use crate::*;
 
@@ -84,13 +83,6 @@ pub fn update(ctx: &mut Ctx) {
     }
 
 
-    if keyboard_input.just_pressed(mq::KeyCode::K) || mq::keyboard_input.just_pressed(mq::KeyCode::U) {
-        ctx.availability = match ctx.availability {
-            CellItemAvailability::Available => CellItemAvailability::Used,
-            CellItemAvailability::Used => CellItemAvailability::Available,
-        };
-    }
-
     // todo: smarter fit rect for all tiles
     let fit_rect = Rect {
         x: -3.,
@@ -101,29 +93,10 @@ pub fn update(ctx: &mut Ctx) {
     let whole_camera = camera_zoom_to_fit(fit_rect);
     set_camera(&whole_camera);
 
-    if let Some((tile_name, tile)) = tile {
-        for cell in tile.cells_iter_mut() {
-            cell.set_availability(ctx.availability);
-        }
-        if keyboard_input.just_pressed(mq::KeyCode::LeftBracket) {
-            tile.rotate(SpinDirection::CounterClockwise);
-        }
-        if keyboard_input.just_pressed(mq::KeyCode::RightBracket) {
-            tile.rotate(SpinDirection::Clockwise);
-        }
-        ctx.text = format!(
-            "TILE: {} (idx={}, avail={:?})",
-            tile_name, ctx.tile_idx, ctx.availability
-        );
-    } else {
-        ctx.text = "no tile".to_string();
-    }
 
     if keyboard_input.just_pressed(mq::KeyCode::P) {
         println!("{:#?}", tile);
     }
-
-    Continuation::Continue
     */
 }
 
@@ -170,6 +143,7 @@ pub fn spawn_tile(
     refresh: Res<RefreshTile>,
     tile: Option<ResMut<CurrentTile>>,
     mut commands: Commands,
+    mut query: Query<&mut Text, With<TitleString>>,
 ) {
     if !(refresh.0 || ctx.is_changed() || availability.is_changed()) {
         return;
@@ -181,11 +155,30 @@ pub fn spawn_tile(
         commands.entity(tile.id).despawn_recursive();
     }
 
-    let (_name, tile) = if let Some(item) = ctx.tileset.get(ctx.tile_idx as usize) {
-        item
+    let title_str = &mut query.single_mut().sections[0].value;
+    let tile = if let Some(item) = ctx.tileset.get(ctx.tile_idx as usize) {
+        *title_str = format!(
+            "TILE: {} (idx={}, avail={:?})",
+            item.0, ctx.tile_idx, availability.0
+        );
+        &item.1
     } else {
+        *title_str = "no tile".to_string();
         return;
     };
+
+    /*
+    if let Some((tile_name, tile)) = tile {
+        ...
+        if keyboard_input.just_pressed(mq::KeyCode::LeftBracket) {
+            tile.rotate(SpinDirection::CounterClockwise);
+        }
+        if keyboard_input.just_pressed(mq::KeyCode::RightBracket) {
+            tile.rotate(SpinDirection::Clockwise);
+        }
+        ...
+    }
+    */
 
     let mut tile = tile.clone();
     for cell in tile.cells_iter_mut() {

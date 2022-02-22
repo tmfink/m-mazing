@@ -3,6 +3,7 @@ use std::{fs::File, io::Read, path::PathBuf, sync::mpsc};
 use anyhow::{Context, Result};
 use clap::Parser;
 
+use m_mazing_core::bevy::asset::AssetServerSettings;
 use m_mazing_core::prelude::*;
 use notify::Watcher;
 
@@ -71,6 +72,9 @@ pub struct Ctx {
     //pub notify_watcher: notify::RecommendedWatcher,
 }
 
+#[derive(Component)]
+pub struct TitleString;
+
 #[derive(Debug)]
 pub struct TileAvailability(pub CellItemAvailability);
 
@@ -137,6 +141,57 @@ fn setup_system(mut commands: Commands) {
     commands.spawn_bundle(camera_bundle);
 }
 
+fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let font = asset_server.load("fonts/FiraMono-Medium.ttf");
+    commands.spawn_bundle(UiCameraBundle::default());
+
+    commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                justify_content: JustifyContent::SpaceBetween,
+                ..Default::default()
+            },
+            color: Color::NONE.into(),
+            ..Default::default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn_bundle(NodeBundle {
+                    style: Style {
+                        size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                        position_type: PositionType::Absolute,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::FlexEnd,
+                        ..Default::default()
+                    },
+                    color: Color::NONE.into(),
+
+                    ..Default::default()
+                })
+                .with_children(|parent| {
+                    parent
+                        .spawn_bundle(TextBundle {
+                            style: Style {
+                                size: Size::new(Val::Auto, Val::Auto),
+                                ..Default::default()
+                            },
+                            text: Text::with_section(
+                                "",
+                                TextStyle {
+                                    font: font.clone(),
+                                    font_size: 50.0,
+                                    color: Color::BLACK,
+                                },
+                                Default::default(),
+                            ),
+                            ..Default::default()
+                        })
+                        .insert(TitleString);
+                });
+        });
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemLabel)]
 enum MySystemLabels {
     FrameInit,
@@ -164,9 +219,14 @@ fn main() -> Result<()> {
         .init_resource::<RenderState>()
         .init_resource::<TileAvailability>()
         .insert_resource(RefreshTile(true))
+        .insert_resource(AssetServerSettings {
+            asset_folder: "../../assets".to_string(),
+            ..Default::default()
+        })
         .add_plugins(DefaultPlugins)
         .add_plugin(ShapePlugin)
         .add_startup_system(setup_system)
+        .add_startup_system(ui_setup)
         .add_system(frame_init.before(MySystemLabels::Input))
         .add_system(keyboard_input_system.label(MySystemLabels::Input))
         .add_system(
