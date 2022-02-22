@@ -15,6 +15,15 @@ use m_mazing_core::bevy;
 mod gui;
 use crate::gui::*;
 
+const LEGEND: &str = "
+Arrow keys - cycle;
+K/U - toggle cell used;
+[] - rotate;
+P - print;
+R - reload;
+Home/End - start/end;
+";
+
 /// Utility to debug Tiles
 #[derive(Parser, Debug, Clone)]
 #[clap(about, version, author)]
@@ -190,11 +199,33 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                         .insert(TitleString);
                 });
         });
+
+    commands.spawn_bundle(TextBundle {
+        style: Style {
+            align_self: AlignSelf::FlexEnd,
+            position_type: PositionType::Absolute,
+            position: Rect {
+                top: Val::Px(5.0),
+                left: Val::Px(15.0),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        text: Text::with_section(
+            LEGEND.trim().to_string(),
+            TextStyle {
+                font: font.clone(),
+                font_size: 40.0,
+                color: Color::WHITE,
+            },
+            Default::default(),
+        ),
+        ..Default::default()
+    });
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemLabel)]
 enum MySystemLabels {
-    FrameInit,
     Input,
     SpawnTile,
 }
@@ -203,6 +234,7 @@ fn frame_init(mut refresh: ResMut<RefreshTile>) {
     refresh.0 = false;
 }
 
+#[allow(unused)]
 fn debug_system(query: Query<Entity>) {
     info!("entities: {}", query.iter().count());
 }

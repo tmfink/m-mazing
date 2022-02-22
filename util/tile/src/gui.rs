@@ -4,21 +4,12 @@ use bevy::app::AppExit;
 
 use crate::*;
 
-const LEGEND: &str = "
-Arrow keys - cycle;
-K/U - toggle cell used;
-[] - rotate;
-P - print;
-R - reload;
-Home/End - start/end;
-";
-
 pub fn keyboard_input_system(
     keyboard_input: Res<Input<KeyCode>>,
     mut app_exit_events: EventWriter<AppExit>,
     mut should_refresh: ResMut<RefreshTile>,
     mut ctx: ResMut<Ctx>,
-    mut tile: Option<ResMut<CurrentTile>>,
+    tile: Option<ResMut<CurrentTile>>,
     mut availability: ResMut<TileAvailability>,
 ) {
     if keyboard_input.any_pressed([KeyCode::Escape, KeyCode::Q]) {
@@ -53,7 +44,7 @@ pub fn keyboard_input_system(
     }
 
     if keyboard_input.any_just_pressed([KeyCode::K, KeyCode::U]) {
-        if let Some(mut tile) = tile {
+        if let Some(tile) = tile {
             availability.0 = match availability.0 {
                 CellItemAvailability::Available => CellItemAvailability::Used,
                 CellItemAvailability::Used => CellItemAvailability::Available,
@@ -63,9 +54,9 @@ pub fn keyboard_input_system(
     }
 }
 
+/*
 pub fn update(ctx: &mut Ctx) {
 
-    /*
     match ctx.notify_rx.try_recv() {
         Ok(Ok(event)) => {
             info!("new event {:?}", event);
@@ -97,15 +88,11 @@ pub fn update(ctx: &mut Ctx) {
     if keyboard_input.just_pressed(mq::KeyCode::P) {
         println!("{:#?}", tile);
     }
-    */
 }
+*/
 
+/*
 pub fn draw(ctx: NonSend<Ctx>, render: Res<RenderState>, mut commands: Commands) {
-    //if let Some((_tile_name, tile)) = ctx.tileset.get(ctx.tile_idx as usize) {
-    //    tile.render(Vec2::default(), &render, &mut commands);
-    //}
-
-    /*
     // screen space camera for text
     let (font_size, font_scale, font_scale_aspect) = camera_font_scale(render.theme.font_size);
     draw_text_align(
@@ -120,21 +107,8 @@ pub fn draw(ctx: NonSend<Ctx>, render: Res<RenderState>, mut commands: Commands)
             font: Default::default(),
         },
     );
-
-    draw_text_align(
-        LEGEND.trim(),
-        AlignHoriz::Left,
-        AlignVert::Top,
-        TextParams {
-            color: render.theme.font_color,
-            font_size,
-            font_scale,
-            font_scale_aspect,
-            font: Default::default(),
-        },
-    );
-    */
 }
+*/
 
 pub fn spawn_tile(
     ctx: Res<Ctx>,
