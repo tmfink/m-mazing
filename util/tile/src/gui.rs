@@ -11,6 +11,7 @@ pub fn keyboard_input_system(
     mut ctx: ResMut<Ctx>,
     tile: Option<ResMut<CurrentTile>>,
     mut availability: ResMut<TileAvailability>,
+    mut tile_rotation: ResMut<TileRotation>,
 ) {
     if keyboard_input.any_pressed([KeyCode::Escape, KeyCode::Q]) {
         app_exit_events.send(AppExit);
@@ -44,13 +45,20 @@ pub fn keyboard_input_system(
     }
 
     if keyboard_input.any_just_pressed([KeyCode::K, KeyCode::U]) {
-        if let Some(tile) = tile {
-            availability.0 = match availability.0 {
-                CellItemAvailability::Available => CellItemAvailability::Used,
-                CellItemAvailability::Used => CellItemAvailability::Available,
-            };
-            info!("availability = {:?}", availability.0);
-        }
+        availability.0 = match availability.0 {
+            CellItemAvailability::Available => CellItemAvailability::Used,
+            CellItemAvailability::Used => CellItemAvailability::Available,
+        };
+        info!("availability = {:?}", availability.0);
+    }
+
+    const NUM_SPIN_DIRS: u8 = 4;
+    if keyboard_input.any_just_pressed([KeyCode::LBracket]) {
+        tile_rotation.left_turns = (tile_rotation.left_turns + 1).rem_euclid(NUM_SPIN_DIRS);
+    }
+    if keyboard_input.any_just_pressed([KeyCode::RBracket]) {
+        tile_rotation.left_turns =
+            (tile_rotation.left_turns as i8 - 1).rem_euclid(NUM_SPIN_DIRS as i8) as u8;
     }
 }
 
@@ -95,18 +103,6 @@ pub fn update(ctx: &mut Ctx) {
 pub fn draw(ctx: NonSend<Ctx>, render: Res<RenderState>, mut commands: Commands) {
     // screen space camera for text
     let (font_size, font_scale, font_scale_aspect) = camera_font_scale(render.theme.font_size);
-    draw_text_align(
-        &ctx.text,
-        AlignHoriz::Center,
-        AlignVert::Bottom,
-        TextParams {
-            color: render.theme.font_color,
-            font_size,
-            font_scale,
-            font_scale_aspect,
-            font: Default::default(),
-        },
-    );
 }
 */
 
@@ -116,10 +112,11 @@ pub fn spawn_tile(
     render: Res<RenderState>,
     refresh: Res<RefreshTile>,
     tile: Option<ResMut<CurrentTile>>,
+    tile_rotation: Res<TileRotation>,
     mut commands: Commands,
     mut query: Query<&mut Text, With<TitleString>>,
 ) {
-    if !(refresh.0 || ctx.is_changed() || availability.is_changed()) {
+    if !(refresh.0 || ctx.is_changed() || availability.is_changed() || tile_rotation.is_changed()) {
         return;
     }
 
@@ -132,8 +129,8 @@ pub fn spawn_tile(
     let title_str = &mut query.single_mut().sections[0].value;
     let tile = if let Some(item) = ctx.tileset.get(ctx.tile_idx as usize) {
         *title_str = format!(
-            "TILE: {} (idx={}, avail={:?})",
-            item.0, ctx.tile_idx, availability.0
+            "TILE: {} (idx={})\navail={:?}, left_turns={}",
+            item.0, ctx.tile_idx, availability.0, tile_rotation.left_turns
         );
         &item.1
     } else {
@@ -141,22 +138,12 @@ pub fn spawn_tile(
         return;
     };
 
-    /*
-    if let Some((tile_name, tile)) = tile {
-        ...
-        if keyboard_input.just_pressed(mq::KeyCode::LeftBracket) {
-            tile.rotate(SpinDirection::CounterClockwise);
-        }
-        if keyboard_input.just_pressed(mq::KeyCode::RightBracket) {
-            tile.rotate(SpinDirection::Clockwise);
-        }
-        ...
-    }
-    */
-
     let mut tile = tile.clone();
     for cell in tile.cells_iter_mut() {
         cell.set_availability(availability.0);
+    }
+    for _ in 0..tile_rotation.left_turns {
+        tile.rotate(SpinDirection::CounterClockwise);
     }
 
     let id = tile.spawn(Vec2::ZERO, &*render, &mut commands);

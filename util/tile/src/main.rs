@@ -87,6 +87,11 @@ pub struct TitleString;
 #[derive(Debug)]
 pub struct TileAvailability(pub CellItemAvailability);
 
+#[derive(Debug, Default)]
+pub struct TileRotation {
+    pub left_turns: u8,
+}
+
 impl Default for TileAvailability {
     fn default() -> Self {
         Self(CellItemAvailability::Available)
@@ -255,6 +260,7 @@ fn main() -> Result<()> {
             asset_folder: "../../assets".to_string(),
             ..Default::default()
         })
+        .init_resource::<TileRotation>()
         .add_plugins(DefaultPlugins)
         .add_plugin(ShapePlugin)
         .add_startup_system(setup_system)
