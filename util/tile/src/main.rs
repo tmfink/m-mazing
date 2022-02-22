@@ -272,6 +272,7 @@ fn main() -> Result<()> {
                 .label(MySystemLabels::SpawnTile)
                 .after(MySystemLabels::Input),
         )
+        .add_system(print_tile.after(MySystemLabels::SpawnTile))
         //.add_system(debug_system)
         .run();
 

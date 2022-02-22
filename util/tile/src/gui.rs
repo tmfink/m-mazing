@@ -91,11 +91,6 @@ pub fn update(ctx: &mut Ctx) {
     };
     let whole_camera = camera_zoom_to_fit(fit_rect);
     set_camera(&whole_camera);
-
-
-    if keyboard_input.just_pressed(mq::KeyCode::P) {
-        println!("{:#?}", tile);
-    }
 }
 */
 
@@ -150,4 +145,13 @@ pub fn spawn_tile(
 
     let new_tile = CurrentTile { id, tile };
     commands.insert_resource(new_tile);
+}
+
+pub fn print_tile(keyboard_input: Res<Input<KeyCode>>, tile: Option<Res<CurrentTile>>) {
+    if keyboard_input.just_pressed(KeyCode::P) {
+        match tile {
+            None => println!("No tile"),
+            Some(tile) => println!("{:#?}", tile.tile),
+        }
+    }
 }
