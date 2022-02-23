@@ -8,8 +8,7 @@ pub fn keyboard_input_system(
     keyboard_input: Res<Input<KeyCode>>,
     mut app_exit_events: EventWriter<AppExit>,
     mut should_refresh: ResMut<RefreshTile>,
-    mut ctx: ResMut<Ctx>,
-    tile: Option<ResMut<CurrentTile>>,
+    mut ctx: NonSendMut<Ctx>,
     mut availability: ResMut<TileAvailability>,
     mut tile_rotation: ResMut<TileRotation>,
 ) {
@@ -21,7 +20,7 @@ pub fn keyboard_input_system(
         should_refresh.0 = true;
         match ctx.refresh() {
             Ok(()) => info!("Manually reloading"),
-            Err(err) => error!("failed to reload: {:#}", err),
+            Err(err) => error!("Failed to manually reload: {:#}", err),
         }
     }
 
@@ -66,19 +65,25 @@ pub fn keyboard_input_system(
     }
 }
 
-/*
-pub fn update(ctx: &mut Ctx) {
-
+pub fn notify_tileset_change(mut should_refresh: ResMut<RefreshTile>, mut ctx: NonSendMut<Ctx>) {
     match ctx.notify_rx.try_recv() {
         Ok(Ok(event)) => {
             info!("new event {:?}", event);
-            should_refresh = true
+            should_refresh.0 = true;
+
+            match ctx.refresh() {
+                Ok(()) => info!("Manually reloading"),
+                Err(err) => error!("Failed to manually reload: {:#}", err),
+            }
         }
         Ok(Err(err)) => error!("Failed to get new event {:#}", err),
         Err(TryRecvError::Empty) => (),
         Err(TryRecvError::Disconnected) => error!("Notify disconnected"),
     }
+}
 
+/*
+pub fn update(ctx: &mut Ctx) {
     // todo: smarter fit rect for all tiles
     let fit_rect = Rect {
         x: -3.,
@@ -99,7 +104,7 @@ pub fn draw(ctx: NonSend<Ctx>, render: Res<RenderState>, mut commands: Commands)
 */
 
 pub fn spawn_tile(
-    ctx: Res<Ctx>,
+    ctx: NonSend<Ctx>,
     availability: Res<TileAvailability>,
     render: Res<RenderState>,
     refresh: Res<RefreshTile>,

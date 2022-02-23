@@ -76,9 +76,8 @@ pub struct Ctx {
     pub args: Args,
     pub tileset: Vec<(String, Tile)>,
     pub tile_idx: isize,
-    //pub text: String,
-    //pub notify_rx: mpsc::Receiver<notify::Result<notify::Event>>,
-    //pub notify_watcher: notify::RecommendedWatcher,
+    pub notify_rx: mpsc::Receiver<notify::Result<notify::Event>>,
+    pub notify_watcher: notify::RecommendedWatcher,
 }
 
 #[derive(Component)]
@@ -114,9 +113,8 @@ impl Ctx {
             args,
             tileset: Default::default(),
             tile_idx,
-            //text: String::new(),
-            //notify_rx,
-            //notify_watcher,
+            notify_rx,
+            notify_watcher,
         };
 
         ctx.refresh()?;
@@ -252,7 +250,7 @@ fn main() -> Result<()> {
 
     App::new()
         .insert_resource(Msaa { samples: 4 })
-        .insert_resource(ctx)
+        .insert_non_send_resource(ctx)
         .init_resource::<RenderState>()
         .init_resource::<TileAvailability>()
         .insert_resource(RefreshTile(true))
@@ -267,6 +265,7 @@ fn main() -> Result<()> {
         .add_startup_system(ui_setup)
         .add_system(frame_init.before(MySystemLabels::Input))
         .add_system(keyboard_input_system.label(MySystemLabels::Input))
+        .add_system(notify_tileset_change.label(MySystemLabels::Input))
         .add_system(
             spawn_tile
                 .label(MySystemLabels::SpawnTile)
