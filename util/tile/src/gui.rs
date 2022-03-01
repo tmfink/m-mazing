@@ -103,6 +103,7 @@ pub fn draw(ctx: NonSend<Ctx>, render: Res<RenderState>, mut commands: Commands)
 }
 */
 
+#[allow(clippy::too_many_arguments)]
 pub fn spawn_tile(
     ctx: NonSend<Ctx>,
     availability: Res<TileAvailability>,

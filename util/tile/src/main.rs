@@ -218,7 +218,7 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         text: Text::with_section(
             LEGEND.trim().to_string(),
             TextStyle {
-                font: font.clone(),
+                font,
                 font_size: 40.0,
                 color: Color::WHITE,
             },
@@ -258,7 +258,6 @@ fn main() -> Result<()> {
         .insert_resource(RefreshTile(true))
         .insert_resource(AssetServerSettings {
             asset_folder: "../../assets".to_string(),
-            ..Default::default()
         })
         .init_resource::<TileRotation>()
         .insert_resource(bevy::log::LogSettings {

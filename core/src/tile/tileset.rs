@@ -519,15 +519,15 @@ E: 01-23, 00-33, 33-02
         let tileset_1 = format!("@tile1\n{}", TILE1_STR);
         assert_eq!(
             tileset_from_str(&tileset_1),
-            Ok(vec![("tile1".to_string(), TILE1.clone()),])
+            Ok(vec![("tile1".to_string(), TILE1),])
         );
 
         let tileset_12 = format!("@tile1\n{}\n@tile2\n{}", TILE1_STR, TILE2_STR);
         assert_eq!(
             tileset_from_str(&tileset_12),
             Ok(vec![
-                ("tile1".to_string(), TILE1.clone()),
-                ("tile2".to_string(), TILE2.clone()),
+                ("tile1".to_string(), TILE1),
+                ("tile2".to_string(), TILE2),
             ]),
         );
 
@@ -536,7 +536,7 @@ E: 01-23, 00-33, 33-02
             tileset_from_str(&tileset_31),
             Ok(vec![
                 ("tile3".to_string(), TILE3.clone()),
-                ("tile1".to_string(), TILE1.clone()),
+                ("tile1".to_string(), TILE1),
             ]),
         );
     }
