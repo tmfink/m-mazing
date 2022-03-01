@@ -1,6 +1,5 @@
-use crate::prelude::*;
-
 /*
+use crate::prelude::*;
 
 /// Zoom camera to fit rectangle while maintaining aspect ratio
 #[must_use]

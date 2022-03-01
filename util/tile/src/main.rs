@@ -7,7 +7,8 @@ use m_mazing_core::bevy::asset::AssetServerSettings;
 use m_mazing_core::prelude::*;
 use notify::Watcher;
 
-use bevy::ecs as bevy_ecs;
+use bevy::ecs as bevy_ecs; // needed for Component derive
+use bevy::log::Level;
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
 use m_mazing_core::bevy;
@@ -45,20 +46,20 @@ pub struct Args {
     index: usize,
 }
 
-fn init_logging(args: &Args) {
-    use log::LevelFilter::*;
-
-    let levels = [Off, Error, Warn, Info, Debug, Trace];
+fn log_level(args: &Args) -> Level {
+    let levels = &[
+        Level::ERROR,
+        Level::WARN,
+        Level::INFO,
+        Level::DEBUG,
+        Level::TRACE,
+    ];
     let level_count = 2 + args.verbose - args.quiet;
 
     let idx = level_count.clamp(0, (levels.len() - 1) as i32);
     let level = levels[idx as usize];
-    simple_logger::SimpleLogger::new()
-        .with_level(level)
-        .with_utc_timestamps()
-        .init()
-        .expect("Failed to init logging");
     info!("log verbosity: {:?}", level);
+    level
 }
 
 #[derive(Debug)]
@@ -245,6 +246,7 @@ fn debug_system(query: Query<Entity>) {
 // todo: manual Window::new() to support anyhow::Result
 fn main() -> Result<()> {
     let ctx = Ctx::new().with_context(|| "Failed to generate context")?;
+    let level = log_level(&ctx.args);
 
     println!("tileset: {:#?}", ctx.tileset);
 
@@ -259,6 +261,10 @@ fn main() -> Result<()> {
             ..Default::default()
         })
         .init_resource::<TileRotation>()
+        .insert_resource(bevy::log::LogSettings {
+            level,
+            ..Default::default()
+        })
         .add_plugins(DefaultPlugins)
         .add_plugin(ShapePlugin)
         .add_startup_system(setup_system)
