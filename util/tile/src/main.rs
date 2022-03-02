@@ -242,7 +242,6 @@ fn debug_system(query: Query<Entity>) {
     info!("entities: {}", query.iter().count());
 }
 
-// todo: manual Window::new() to support anyhow::Result
 fn main() -> Result<()> {
     let ctx = Ctx::new().with_context(|| "Failed to generate context")?;
     let level = log_level(&ctx.args);

@@ -419,7 +419,6 @@ impl Tile {
         render_walls(|wall| wall == WallState::Open, commands);
         render_walls(|wall| wall != WallState::Open, commands);
 
-        // todo: render cells
         for (row_idx, row) in self.cell_grid().iter().enumerate() {
             let row_idx_float = row_idx as f32;
             let y = GRID_HALF_WIDTH - row_idx_float * CELL_WIDTH;

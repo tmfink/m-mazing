@@ -168,7 +168,6 @@ where
                 name: String::from_utf8_lossy(tail).to_string(),
             });
         }
-        // todo: save tile name
         let tile_name = String::from_utf8(tail.to_vec()).unwrap();
         debug!("parsed tile_name {:?}", tile_name);
 
@@ -202,18 +201,13 @@ where
         Elevator,
     }
     let mut allow_line_skips = true;
-
-    // todo: escalator
     let mut line_number = 0;
-
     let mut state = ParsingState::WallRow { row_num: 0 };
-
     let mut tile = Tile::default();
 
     for (line_number_x, line_x) in lines {
         line_number = line_number_x as u32;
         let line = line_x.as_ref();
-
         let ctx = ParseContext { line, line_number };
 
         debug!(
