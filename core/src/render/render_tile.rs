@@ -26,8 +26,8 @@ fn render_timer(
 ) {
     const X_LEFT: f32 = 0.25;
     const X_RIGHT: f32 = 0.75;
-    const Y_TOP: f32 = 0.2;
-    const Y_BOTTOM: f32 = 0.8;
+    const Y_TOP: f32 = -0.2;
+    const Y_BOTTOM: f32 = -0.8;
 
     const TILE_POINTS: [Vec2; 5] = [
         const_vec2!([X_LEFT, Y_TOP]),
@@ -91,13 +91,13 @@ fn render_warp(
     commands: &mut Commands,
     tile_entity: Entity,
 ) {
-    let center = Vec2::new(CELL_HALF_WIDTH, CELL_HALF_WIDTH);
+    let center = Vec2::new(CELL_HALF_WIDTH, -CELL_HALF_WIDTH);
 
     const NUM_ANGLES: u32 = 8;
     const NUM_RADII: u32 = 24;
 
     let angles = (0..NUM_ANGLES)
-        .map(|x| x as f32 * 2.0 * std::f32::consts::PI / NUM_ANGLES as f32)
+        .map(|x| x as f32 * -2.0 * std::f32::consts::PI / NUM_ANGLES as f32)
         .cycle();
     let radii = (0..NUM_RADII).map(|x| x as f32 * CELL_HALF_WIDTH * 0.8 / NUM_RADII as f32);
     let points = angles
@@ -130,7 +130,7 @@ fn render_loot(
         origin: RectangleOrigin::Center,
     };
     let rot = Quat::from_rotation_z(std::f32::consts::FRAC_PI_4);
-    let translation = (location + Vec2::new(0.5, 0.5)).extend(CELL_ITEM_Z);
+    let translation = (location + Vec2::new(0.5, -0.5)).extend(CELL_ITEM_Z);
     let transform = Transform::from_rotation(rot).with_translation(translation);
     let entity = commands
         .spawn_bundle(GeometryBuilder::build_as(
@@ -151,7 +151,7 @@ fn render_camera(
     commands: &mut Commands,
     tile_entity: Entity,
 ) {
-    let translation = (location + Vec2::new(0.5, 0.5)).extend(CELL_ITEM_Z);
+    let translation = (location + Vec2::new(0.5, -0.5)).extend(CELL_ITEM_Z);
     let transform = Transform::from_translation(translation);
 
     let points = [
@@ -195,7 +195,7 @@ fn render_crystal_ball(
     commands: &mut Commands,
     tile_entity: Entity,
 ) {
-    let translation = (location + Vec2::new(0.5, 0.5)).extend(CELL_ITEM_Z);
+    let translation = (location + Vec2::new(0.5, -0.5)).extend(CELL_ITEM_Z);
     let transform = Transform::from_translation(translation);
     let draw_mode = DrawMode::Outlined {
         fill_mode: FillMode::color(Color::WHITE),
@@ -238,8 +238,8 @@ fn render_escalator(
     let entity = commands
         .spawn_bundle(GeometryBuilder::build_as(
             &shapes::Line(
-                Vec2::new(a.x() as f32, a.y() as f32),
-                Vec2::new(b.x() as f32, b.y() as f32),
+                Vec2::new(a.x() as f32, 3.0 - a.y() as f32),
+                Vec2::new(b.x() as f32, 3.0 - b.y() as f32),
             ),
             DrawMode::Stroke(StrokeMode::new(
                 render.theme.escalator_color,
@@ -265,9 +265,9 @@ fn render_final_exit(
     let point = TileGridCoord::new(col_idx as u8, row_idx as u8)
         .expect("could not convert row/col idx to tile");
 
-    let angle = -tile.cell_exit_direction(point).as_angle();
+    let angle = tile.cell_exit_direction(point).as_angle();
     let rotation = Quat::from_rotation_z(angle);
-    let translation = (location + Vec2::new(0.5, 0.5)).extend(CELL_BG_Z);
+    let translation = (location + Vec2::new(0.5, -0.5)).extend(CELL_BG_Z);
     let transform = Transform::from_rotation(rotation).with_translation(translation);
 
     let width = 1.0 - render.theme.wall_thickness;
@@ -375,7 +375,7 @@ impl Tile {
             // horizontal walls
             for (row_idx, row) in self.horz_walls().iter().enumerate() {
                 let row_idx = row_idx as f32;
-                let y = -GRID_HALF_WIDTH + row_idx * CELL_WIDTH;
+                let y = GRID_HALF_WIDTH - row_idx * CELL_WIDTH;
                 for (col_idx, wall) in row.iter().copied().enumerate() {
                     let col_idx = col_idx as f32;
                     let x = -GRID_HALF_WIDTH + col_idx * CELL_WIDTH;
@@ -396,7 +396,7 @@ impl Tile {
             // vertical walls
             for (row_idx, row) in self.vert_walls().iter().enumerate() {
                 let row_idx = row_idx as f32;
-                let y = -GRID_HALF_WIDTH + row_idx * CELL_WIDTH;
+                let y = GRID_HALF_WIDTH - row_idx * CELL_WIDTH;
                 for (col_idx, wall) in row.iter().copied().enumerate() {
                     let col_idx = col_idx as f32;
                     let x = -GRID_HALF_WIDTH + col_idx * CELL_WIDTH;
@@ -404,7 +404,7 @@ impl Tile {
                         render_wall(
                             render,
                             Vec2::new(x, y),
-                            Vec2::new(x, y + CELL_WIDTH),
+                            Vec2::new(x, y - CELL_WIDTH),
                             wall,
                             tile_bg_color,
                             commands,
@@ -422,7 +422,7 @@ impl Tile {
         // todo: render cells
         for (row_idx, row) in self.cell_grid().iter().enumerate() {
             let row_idx_float = row_idx as f32;
-            let y = -GRID_HALF_WIDTH + row_idx_float * CELL_WIDTH;
+            let y = GRID_HALF_WIDTH - row_idx_float * CELL_WIDTH;
             for (col_idx, cell) in row.iter().copied().enumerate() {
                 let col_idx_float = col_idx as f32;
                 let x = -GRID_HALF_WIDTH + col_idx_float * CELL_WIDTH;
@@ -431,8 +431,7 @@ impl Tile {
                 if !is_reachable {
                     let covered_cell = shapes::Rectangle {
                         extents: Vec2::new(1., 1.),
-                        // this looks like TopLeft, but we are flipping the Y axis in the camera right now
-                        origin: RectangleOrigin::BottomLeft,
+                        origin: RectangleOrigin::TopLeft,
                     };
                     let covered_cell_id = commands
                         .spawn_bundle(GeometryBuilder::build_as(
