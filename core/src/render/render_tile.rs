@@ -59,8 +59,8 @@ fn render_used_marker(
 ) {
     let x_left = 0.1;
     let x_right = 0.9;
-    let y_top = 0.1;
-    let y_bottom = 0.9;
+    let y_top = -0.1;
+    let y_bottom = -0.9;
 
     let builder = GeometryBuilder::new()
         .add(&shapes::Line(
