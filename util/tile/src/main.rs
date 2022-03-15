@@ -3,15 +3,14 @@ use std::{fs::File, io::Read, path::PathBuf, sync::mpsc};
 use anyhow::{Context, Result};
 use clap::Parser;
 
-use m_mazing_core::bevy::asset::AssetServerSettings;
+use m_mazing_core::bevy;
 use m_mazing_core::prelude::*;
 use notify::Watcher;
 
+use bevy::asset::AssetServerSettings;
 use bevy::ecs as bevy_ecs; // needed for Component derive
-use bevy::log::Level;
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
-use m_mazing_core::bevy;
 
 mod gui;
 use crate::gui::*;
@@ -45,23 +44,6 @@ pub struct Args {
     #[clap(long = "start-idx", short = 'i', default_value = "0")]
     index: usize,
 }
-
-fn log_level(args: &Args) -> Level {
-    let levels = &[
-        Level::ERROR,
-        Level::WARN,
-        Level::INFO,
-        Level::DEBUG,
-        Level::TRACE,
-    ];
-    let level_count = 2 + args.verbose - args.quiet;
-
-    let idx = level_count.clamp(0, (levels.len() - 1) as i32);
-    let level = levels[idx as usize];
-    info!("log verbosity: {:?}", level);
-    level
-}
-
 #[derive(Debug)]
 pub struct CurrentTile {
     pub tile: Tile,
@@ -244,7 +226,7 @@ fn debug_system(query: Query<Entity>) {
 
 fn main() -> Result<()> {
     let ctx = Ctx::new().with_context(|| "Failed to generate context")?;
-    let level = log_level(&ctx.args);
+    let level = log_level(ctx.args.verbose, ctx.args.quiet);
 
     println!("tileset: {:#?}", ctx.tileset);
 

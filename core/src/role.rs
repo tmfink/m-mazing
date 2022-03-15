@@ -17,19 +17,23 @@ const ALLOWED_ACTIONS: &[&[&[BoardAction]]] = &[
         Warp,
         Explore,
         Escalator,
-        Slide(Direction::Left),
-        Slide(Direction::Up),
-        Slide(Direction::Down),
-        Slide(Direction::Right),
+        Slide(CartesianDirection::Left),
+        Slide(CartesianDirection::Up),
+        Slide(CartesianDirection::Down),
+        Slide(CartesianDirection::Right),
     ]],
     // 2 players
     &[
         &[
             Escalator,
             Explore,
-            Slide(Direction::Down),
-            Slide(Direction::Left),
+            Slide(CartesianDirection::Down),
+            Slide(CartesianDirection::Left),
         ],
-        &[Warp, Slide(Direction::Up), Slide(Direction::Right)],
+        &[
+            Warp,
+            Slide(CartesianDirection::Up),
+            Slide(CartesianDirection::Right),
+        ],
     ],
 ];

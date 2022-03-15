@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 categories = ["games"]
 
 [dependencies]
-m-mazing-core = { path = "../../core", features = ["gui"] }
+m-mazing-core = { path = "../../core" }
 
 anyhow = "1.0"
 clap = { version = "3", features = ["derive"] }

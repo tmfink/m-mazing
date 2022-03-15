@@ -1,13 +1,14 @@
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Direction {
+pub enum CartesianDirection {
     Right,
     Up,
     Left,
     Down,
 }
 
-impl Direction {
-    pub const ALL_DIRECTIONS: [Direction; 4] = [Self::Right, Self::Up, Self::Left, Self::Down];
+impl CartesianDirection {
+    pub const ALL_DIRECTIONS: [CartesianDirection; 4] =
+        [Self::Right, Self::Up, Self::Left, Self::Down];
 
     /// What to add to point to get neighbor
     pub fn neighbor_transform(self) -> (i8, i8) {
@@ -19,7 +20,7 @@ impl Direction {
         }
     }
 
-    /// Direction converted to angle (in radians)
+    /// CartesianDirection converted to angle (in radians)
     pub fn as_angle(self) -> f32 {
         match self {
             Self::Right => 0.,

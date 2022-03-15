@@ -5,33 +5,22 @@ pub mod tile;
 
 pub mod prelude {
     pub use crate::action::*;
+    pub use crate::render::{camera::*, shape::*, theme::*, *};
     pub use crate::role::*;
     pub use crate::scenario::*;
     pub use crate::tile::{
         cell::*, direction::*, escalator::*, grid_coord::*, tileset::*, wall::*, *,
     };
     pub use crate::*;
+    pub use bevy_prototype_lyon::prelude::*;
     pub use log::*;
-
-    cfg_if! {
-        if #[cfg(feature = "gui")] {
-            pub use crate::render::{camera::*, shape::*, theme::*, *};
-            pub use bevy_prototype_lyon::prelude::*;
-        }
-    }
 }
 
-cfg_if! {
-    if #[cfg(feature = "gui")] {
-        pub use bevy;
-        pub use bevy_prototype_lyon;
-
-        pub mod render;
-        use bevy::prelude::*;
-    }
-}
-
-use cfg_if::cfg_if;
+pub use bevy;
+use bevy::log::Level;
+pub use bevy_prototype_lyon;
+pub mod render;
+use bevy::prelude::*;
 
 pub struct PlayerId(u32);
 
@@ -71,4 +60,20 @@ pub(crate) fn init_logging() {
     LOGGING.call_once(|| {
         env_logger::init();
     });
+}
+
+pub fn log_level(verbose: i32, quiet: i32) -> Level {
+    let levels = &[
+        Level::ERROR,
+        Level::WARN,
+        Level::INFO,
+        Level::DEBUG,
+        Level::TRACE,
+    ];
+    let level_count = 2 + verbose - quiet;
+
+    let idx = level_count.clamp(0, (levels.len() - 1) as i32);
+    let level = levels[idx as usize];
+    info!("log verbosity: {:?}", level);
+    level
 }

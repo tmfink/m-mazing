@@ -1940,6 +1940,8 @@ dependencies = [
 name = "m-mazing-client"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "clap",
  "m-mazing-core",
 ]
 

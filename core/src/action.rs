@@ -4,7 +4,7 @@ use crate::prelude::*;
 pub enum BoardAction {
     Escalator,
     Explore,
-    Slide(Direction),
+    Slide(CartesianDirection),
     Warp,
 }
 

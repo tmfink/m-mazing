@@ -30,24 +30,24 @@ impl Tile {
     pub const CELL_GRID_WIDTH: u8 = 4;
     const MAX_ESCALATORS_PER_TILE: u8 = 4;
 
-    /// Directions pointing to edge of tile
+    /// CartesianDirections pointing to edge of tile
     ///
     /// Internal tiles will have no directions
-    pub fn cell_outer_edge_directions(&self, coord: TileGridCoord) -> Vec<Direction> {
+    pub fn cell_outer_edge_directions(&self, coord: TileGridCoord) -> Vec<CartesianDirection> {
         const MAX_IDX: u8 = Tile::CELL_GRID_WIDTH - 1;
 
         let mut dirs = Vec::with_capacity(4);
         if coord.x() == 0 {
-            dirs.push(Direction::Left);
+            dirs.push(CartesianDirection::Left);
         }
         if coord.x() == MAX_IDX {
-            dirs.push(Direction::Right);
+            dirs.push(CartesianDirection::Right);
         }
         if coord.y() == 0 {
-            dirs.push(Direction::Up);
+            dirs.push(CartesianDirection::Up);
         }
         if coord.y() == MAX_IDX {
-            dirs.push(Direction::Down);
+            dirs.push(CartesianDirection::Down);
         }
         dirs
     }
@@ -60,7 +60,7 @@ impl Tile {
     pub fn cell_cardinal_neighbor_coords(
         &self,
         coord: TileGridCoord,
-        direction: Direction,
+        direction: CartesianDirection,
     ) -> Option<TileGridCoord> {
         coord.added(direction.neighbor_transform())
     }
@@ -69,7 +69,7 @@ impl Tile {
     pub fn cell_cardinal_neighbor(
         &self,
         coord: TileGridCoord,
-        direction: Direction,
+        direction: CartesianDirection,
     ) -> Option<TileCell> {
         let neighbor_point = self.cell_cardinal_neighbor_coords(coord, direction)?;
         Some(self.cell_value(neighbor_point))
@@ -78,11 +78,14 @@ impl Tile {
     /// Coordinates of "neighbors" in current tile that are "one step" away
     /// (either by cardinal direction walk or escalator).
     pub fn cell_immediate_neighbor_coords(&self, coord: TileGridCoord) -> Vec<TileGridCoord> {
-        let cardinal_neighbors = Direction::ALL_DIRECTIONS.iter().copied().filter_map(|dir| {
-            self.cell_cardinal_neighbor_coords(coord, dir)
-                // todo: handle orange-only walls
-                .filter(|_| self.cell_wall(coord, dir) == WallState::Open)
-        });
+        let cardinal_neighbors = CartesianDirection::ALL_DIRECTIONS
+            .iter()
+            .copied()
+            .filter_map(|dir| {
+                self.cell_cardinal_neighbor_coords(coord, dir)
+                    // todo: handle orange-only walls
+                    .filter(|_| self.cell_wall(coord, dir) == WallState::Open)
+            });
         let escalator_neighbors = self
             .escalators
             .iter()
@@ -148,19 +151,19 @@ impl Tile {
         is_reachable_coord
     }
 
-    pub fn cell_wall(&self, coord: TileGridCoord, direction: Direction) -> WallState {
+    pub fn cell_wall(&self, coord: TileGridCoord, direction: CartesianDirection) -> WallState {
         let x = coord.x() as usize;
         let y = coord.y() as usize;
         match direction {
-            Direction::Up => self.horz_walls[y][x],
-            Direction::Down => self.horz_walls[y + 1][x],
-            Direction::Left => self.vert_walls[y][x],
-            Direction::Right => self.vert_walls[y][x + 1],
+            CartesianDirection::Up => self.horz_walls[y][x],
+            CartesianDirection::Down => self.horz_walls[y + 1][x],
+            CartesianDirection::Left => self.vert_walls[y][x],
+            CartesianDirection::Right => self.vert_walls[y][x + 1],
         }
     }
 
-    pub fn cell_exit_direction(&self, coord: TileGridCoord) -> Direction {
-        let open_exit_dirs: Vec<Direction> = self
+    pub fn cell_exit_direction(&self, coord: TileGridCoord) -> CartesianDirection {
+        let open_exit_dirs: Vec<CartesianDirection> = self
             .cell_outer_edge_directions(coord)
             .iter()
             .copied()
@@ -174,7 +177,7 @@ impl Tile {
                     "Unable to find a good direction for exit direction at {:?}",
                     coord
                 );
-                Direction::Right
+                CartesianDirection::Right
             }
         };
         dir
