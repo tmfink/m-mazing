@@ -2,7 +2,5 @@
 resolver = "2" # Important! wgpu/Bevy needs this!
 
 members = [
-    "client",
-    "core",
-    "util/tile",
+    "crates/*",
 ]
