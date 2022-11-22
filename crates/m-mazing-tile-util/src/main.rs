@@ -85,8 +85,9 @@ impl Ctx {
         let args = Args::parse();
 
         let (notify_tx, notify_rx) = mpsc::channel();
-        let mut notify_watcher = notify::RecommendedWatcher::new(notify_tx)
-            .context("Failed to create notify watcher")?;
+        let mut notify_watcher =
+            notify::RecommendedWatcher::new(notify_tx, notify::Config::default())
+                .context("Failed to create notify watcher")?;
         notify_watcher
             .watch(&args.tile_file, notify::RecursiveMode::Recursive)
             .context(format!("Failed to watch file {:?}", args.tile_file))?;

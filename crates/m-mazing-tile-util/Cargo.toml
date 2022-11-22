@@ -8,6 +8,4 @@ m-mazing-core = { path = "../m-mazing-core" }
 
 anyhow = "1.0"
 clap = { version = "3", features = ["derive"] }
-
-# needs fs watcher Debug impl: 0faae4139f4aff5f2a07c7e2d8c41ee181367183
-notify = { git = "https://github.com/notify-rs/notify", rev = "18df78efff79a6eb7e1305280957c4b3ae43e1df" }
+notify = "5.0"

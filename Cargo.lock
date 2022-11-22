@@ -254,7 +254,7 @@ dependencies = [
  "fastrand",
  "js-sys",
  "ndk-glue 0.7.0",
- "notify 5.0.0",
+ "notify",
  "parking_lot 0.12.1",
  "serde",
  "thiserror",
@@ -2032,7 +2032,7 @@ dependencies = [
  "anyhow",
  "clap",
  "m-mazing-core",
- "notify 5.0.0-pre.14",
+ "notify",
 ]
 
 [[package]]
@@ -2296,23 +2296,6 @@ checksum = "ffb4262d26ed83a1c0a33a38fe2bb15797329c85770da05e6b828ddb782627af"
 dependencies = [
  "memchr",
  "version_check",
-]
-
-[[package]]
-name = "notify"
-version = "5.0.0-pre.14"
-source = "git+https://github.com/notify-rs/notify?rev=18df78efff79a6eb7e1305280957c4b3ae43e1df#18df78efff79a6eb7e1305280957c4b3ae43e1df"
-dependencies = [
- "bitflags",
- "crossbeam-channel",
- "filetime",
- "fsevent-sys",
- "inotify",
- "kqueue",
- "libc",
- "mio",
- "walkdir",
- "winapi",
 ]
 
 [[package]]
