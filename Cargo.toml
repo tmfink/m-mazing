@@ -4,3 +4,11 @@ resolver = "2" # Important! wgpu/Bevy needs this!
 members = [
     "crates/*",
 ]
+
+[workspace.package]
+authors = ["Travis Finkenauer <tmfinken@gmail.com>"]
+license = "MIT OR Apache-2.0"
+categories = ["games"]
+
+[workspace.dependencies]
+bevy = { version = "0.6.1", features = ["dynamic"] }

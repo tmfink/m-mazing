@@ -2,9 +2,6 @@
 name = "m-mazing-tile-util"
 version = "0.1.0"
 edition = "2021"
-authors = ["Travis Finkenauer <tmfinken@gmail.com>"]
-license = "MIT OR Apache-2.0"
-categories = ["games"]
 
 [dependencies]
 m-mazing-core = { path = "../m-mazing-core" }
