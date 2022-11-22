@@ -2,7 +2,11 @@ use anyhow::Result;
 use bevy::prelude::*;
 use clap::Parser;
 
-use m_mazing_core::{bevy, log_level, prelude::*};
+use m_mazing_core::{
+    bevy::{self, log::LogPlugin},
+    log_level,
+    prelude::*,
+};
 
 /// Utility to debug Tiles
 #[derive(Parser, Debug, Clone)]
@@ -23,11 +27,10 @@ fn main() -> Result<()> {
 
     App::new()
         .insert_resource(Msaa { samples: 4 })
-        .insert_resource(bevy::log::LogSettings {
+        .add_plugins(DefaultPlugins.set(LogPlugin {
             level,
             ..Default::default()
-        })
-        .add_plugins(DefaultPlugins)
+        }))
         .add_plugin(ShapePlugin)
         .run();
 

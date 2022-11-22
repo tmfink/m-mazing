@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 arrayvec = "0.7"
 bevy = { workspace = true }
-bevy_prototype_lyon = "0.4.0"
+bevy_prototype_lyon = { workspace = true }
 cfg-if = "1.0"
 env_logger = "0.9"
 itertools = "0.10"

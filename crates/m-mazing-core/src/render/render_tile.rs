@@ -1,5 +1,3 @@
-use bevy::math::{const_vec2, const_vec3};
-
 use crate::{prelude::*, render::polar_to_cartesian};
 
 const GRID_WIDTH: f32 = Tile::CELL_GRID_WIDTH as f32;
@@ -9,8 +7,12 @@ const CELL_HALF_WIDTH: f32 = 0.5 * CELL_WIDTH;
 
 const WALL_Z: f32 = 0.1;
 const WALL_TRANSFORM: Transform = Transform {
-    translation: const_vec3!([0., 0., WALL_Z]),
-    ..Transform::identity()
+    translation: Vec3 {
+        x: 0.,
+        y: 0.,
+        z: WALL_Z,
+    },
+    ..Transform::IDENTITY
 };
 
 const CELL_BG_Z: f32 = 0.5 * (WALL_Z + CELL_ITEM_Z);
@@ -30,17 +32,32 @@ fn render_timer(
     const Y_BOTTOM: f32 = -0.8;
 
     const TILE_POINTS: [Vec2; 5] = [
-        const_vec2!([X_LEFT, Y_TOP]),
-        const_vec2!([X_RIGHT, Y_TOP]),
-        const_vec2!([X_LEFT, Y_BOTTOM]),
-        const_vec2!([X_RIGHT, Y_BOTTOM]),
-        const_vec2!([X_LEFT, Y_TOP]),
+        Vec2 {
+            x: X_LEFT,
+            y: Y_TOP,
+        },
+        Vec2 {
+            x: X_RIGHT,
+            y: Y_TOP,
+        },
+        Vec2 {
+            x: X_LEFT,
+            y: Y_BOTTOM,
+        },
+        Vec2 {
+            x: X_RIGHT,
+            y: Y_BOTTOM,
+        },
+        Vec2 {
+            x: X_LEFT,
+            y: Y_TOP,
+        },
     ];
 
     let builder = shape::draw_connected_line(TILE_POINTS.iter().copied(), GeometryBuilder::new());
     let transform = Transform::from_translation(location.extend(CELL_ITEM_Z));
     let geo = commands
-        .spawn_bundle(builder.build(
+        .spawn(builder.build(
             DrawMode::Stroke(StrokeMode::new(
                 render.theme.timer_color,
                 render.theme.wall_thickness,
@@ -73,7 +90,7 @@ fn render_used_marker(
         ));
     let transform = Transform::from_translation(location.extend(CELL_MARKER_Z));
     let geo = commands
-        .spawn_bundle(builder.build(
+        .spawn(builder.build(
             DrawMode::Stroke(StrokeMode::new(
                 render.theme.used_marker_color,
                 render.theme.used_marker_thickness,
@@ -107,7 +124,7 @@ fn render_warp(
     let builder = shape::draw_connected_line(points, GeometryBuilder::new());
     let transform = Transform::from_translation(location.extend(CELL_ITEM_Z));
     let geo = commands
-        .spawn_bundle(builder.build(
+        .spawn(builder.build(
             DrawMode::Stroke(StrokeMode::new(
                 pawn.as_color(render),
                 render.theme.warp_thickness,
@@ -133,7 +150,7 @@ fn render_loot(
     let translation = (location + Vec2::new(0.5, -0.5)).extend(CELL_ITEM_Z);
     let transform = Transform::from_rotation(rot).with_translation(translation);
     let entity = commands
-        .spawn_bundle(GeometryBuilder::build_as(
+        .spawn(GeometryBuilder::build_as(
             &shape,
             DrawMode::Stroke(StrokeMode::new(
                 pawn.as_color(render),
@@ -178,7 +195,7 @@ fn render_camera(
     });
 
     let entity = commands
-        .spawn_bundle(builder.build(
+        .spawn(builder.build(
             DrawMode::Stroke(StrokeMode::new(
                 render.theme.camera_color,
                 render.theme.warp_thickness,
@@ -208,7 +225,7 @@ fn render_crystal_ball(
         feature: shapes::RegularPolygonFeature::Radius(0.4),
     };
     let hexagon = commands
-        .spawn_bundle(GeometryBuilder::build_as(&hexagon, draw_mode, transform))
+        .spawn(GeometryBuilder::build_as(&hexagon, draw_mode, transform))
         .id();
     commands.entity(tile_entity).push_children(&[hexagon]);
 
@@ -217,7 +234,7 @@ fn render_crystal_ball(
         radius: 0.3,
     };
     let circle = commands
-        .spawn_bundle(GeometryBuilder::build_as(
+        .spawn(GeometryBuilder::build_as(
             &circle,
             draw_mode,
             Transform::from_translation(Vec3::new(0.0, 0.0, 0.1)),
@@ -236,7 +253,7 @@ fn render_escalator(
     let offset = CELL_HALF_WIDTH - GRID_HALF_WIDTH;
     let transform = Transform::from_xyz(offset, offset, ESCALATOR_Z);
     let entity = commands
-        .spawn_bundle(GeometryBuilder::build_as(
+        .spawn(GeometryBuilder::build_as(
             &shapes::Line(
                 Vec2::new(a.x() as f32, 3.0 - a.y() as f32),
                 Vec2::new(b.x() as f32, 3.0 - b.y() as f32),
@@ -276,7 +293,7 @@ fn render_final_exit(
         origin: RectangleOrigin::Center,
     };
     let bg_square = commands
-        .spawn_bundle(GeometryBuilder::build_as(
+        .spawn(GeometryBuilder::build_as(
             &bg_square,
             DrawMode::Fill(FillMode::color(pawn.as_color(render))),
             transform,
@@ -301,7 +318,7 @@ fn render_final_exit(
             arrow_head + Vec2::new(-head_length, -head_halfwidth),
         ));
     let arrow = commands
-        .spawn_bundle(arrow_builder.build(
+        .spawn(arrow_builder.build(
             DrawMode::Stroke(StrokeMode::new(
                 render.theme.final_exit_arrow_color,
                 render.theme.warp_thickness,
@@ -337,7 +354,7 @@ fn render_wall(
         color = wall.wall_color(render, tile_bg_color);
     }
     let geo = commands
-        .spawn_bundle(builder.build(
+        .spawn(builder.build(
             DrawMode::Stroke(StrokeMode::new(color, render.theme.wall_thickness)),
             WALL_TRANSFORM,
         ))
@@ -363,7 +380,7 @@ impl Tile {
             origin: RectangleOrigin::Center,
         };
         let tile_entity = commands
-            .spawn_bundle(GeometryBuilder::build_as(
+            .spawn(GeometryBuilder::build_as(
                 &shape,
                 DrawMode::Fill(FillMode::color(tile_bg_color)),
                 Transform::from_translation(pos.extend(0.0)),
@@ -433,7 +450,7 @@ impl Tile {
                         origin: RectangleOrigin::TopLeft,
                     };
                     let covered_cell_id = commands
-                        .spawn_bundle(GeometryBuilder::build_as(
+                        .spawn(GeometryBuilder::build_as(
                             &covered_cell,
                             DrawMode::Fill(FillMode::color(render.theme.unreachable_cell_color)),
                             Transform::from_xyz(x, y, CELL_ITEM_Z),

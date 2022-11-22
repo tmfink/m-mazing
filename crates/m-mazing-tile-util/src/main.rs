@@ -4,10 +4,10 @@ use anyhow::{Context, Result};
 use clap::Parser;
 
 use m_mazing_core::bevy;
+use m_mazing_core::bevy::log::LogPlugin;
 use m_mazing_core::prelude::*;
 use notify::Watcher;
 
-use bevy::asset::AssetServerSettings;
 use bevy::ecs as bevy_ecs; // needed for Component derive
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
@@ -44,13 +44,13 @@ pub struct Args {
     #[clap(long = "start-idx", short = 'i', default_value = "0")]
     index: usize,
 }
-#[derive(Debug)]
+#[derive(Debug, Resource)]
 pub struct CurrentTile {
     pub tile: Tile,
     pub id: Entity,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Resource)]
 pub struct RefreshTile(pub bool);
 
 #[allow(dead_code)]
@@ -66,10 +66,10 @@ pub struct Ctx {
 #[derive(Component)]
 pub struct TitleString;
 
-#[derive(Debug)]
+#[derive(Debug, Resource)]
 pub struct TileAvailability(pub CellItemAvailability);
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Resource)]
 pub struct TileRotation {
     pub left_turns: u8,
 }
@@ -120,38 +120,37 @@ impl Ctx {
 
 fn setup_system(mut commands: Commands) {
     const CAMERA_EXTENT: f32 = 3.0;
-    let mut camera_bundle = OrthographicCameraBundle::new_2d();
-    camera_bundle.orthographic_projection.left = -CAMERA_EXTENT;
-    camera_bundle.orthographic_projection.right = CAMERA_EXTENT;
-    camera_bundle.orthographic_projection.top = CAMERA_EXTENT;
-    camera_bundle.orthographic_projection.bottom = -CAMERA_EXTENT;
+    let mut camera_bundle = Camera2dBundle::default();
+    camera_bundle.projection.left = -CAMERA_EXTENT;
+    camera_bundle.projection.right = CAMERA_EXTENT;
+    camera_bundle.projection.top = CAMERA_EXTENT;
+    camera_bundle.projection.bottom = -CAMERA_EXTENT;
 
     // able to re-size window if pop out **after** moving window
-    camera_bundle.orthographic_projection.scaling_mode = ScalingMode::FixedVertical;
+    camera_bundle.projection.scaling_mode = ScalingMode::FixedVertical(CAMERA_EXTENT);
 
     // hack to modify camera
     camera_bundle.transform.scale = Vec3::new(3.0, 3.0, 1.0);
 
-    commands.spawn_bundle(camera_bundle);
+    commands.spawn(camera_bundle);
 }
 
 fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("fonts/FiraMono-Medium.ttf");
-    commands.spawn_bundle(UiCameraBundle::default());
 
     commands
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                 justify_content: JustifyContent::SpaceBetween,
                 ..Default::default()
             },
-            color: Color::NONE.into(),
+            background_color: Color::NONE.into(),
             ..Default::default()
         })
         .with_children(|parent| {
             parent
-                .spawn_bundle(NodeBundle {
+                .spawn(NodeBundle {
                     style: Style {
                         size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                         position_type: PositionType::Absolute,
@@ -159,25 +158,24 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                         align_items: AlignItems::FlexEnd,
                         ..Default::default()
                     },
-                    color: Color::NONE.into(),
+                    background_color: Color::NONE.into(),
 
                     ..Default::default()
                 })
                 .with_children(|parent| {
                     parent
-                        .spawn_bundle(TextBundle {
+                        .spawn(TextBundle {
                             style: Style {
                                 size: Size::new(Val::Auto, Val::Auto),
                                 ..Default::default()
                             },
-                            text: Text::with_section(
+                            text: Text::from_section(
                                 "",
                                 TextStyle {
                                     font: font.clone(),
                                     font_size: 50.0,
                                     color: Color::BLACK,
                                 },
-                                Default::default(),
                             ),
                             ..Default::default()
                         })
@@ -185,25 +183,24 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 });
         });
 
-    commands.spawn_bundle(TextBundle {
+    commands.spawn(TextBundle {
         style: Style {
             align_self: AlignSelf::FlexEnd,
             position_type: PositionType::Absolute,
-            position: Rect {
+            position: UiRect {
                 top: Val::Px(5.0),
                 left: Val::Px(15.0),
                 ..Default::default()
             },
             ..Default::default()
         },
-        text: Text::with_section(
+        text: Text::from_section(
             LEGEND.trim().to_string(),
             TextStyle {
                 font,
                 font_size: 40.0,
                 color: Color::WHITE,
             },
-            Default::default(),
         ),
         ..Default::default()
     });
@@ -236,15 +233,18 @@ fn main() -> Result<()> {
         .init_resource::<RenderState>()
         .init_resource::<TileAvailability>()
         .insert_resource(RefreshTile(true))
-        .insert_resource(AssetServerSettings {
-            asset_folder: "../../assets".to_string(),
-        })
         .init_resource::<TileRotation>()
-        .insert_resource(bevy::log::LogSettings {
-            level,
-            ..Default::default()
-        })
-        .add_plugins(DefaultPlugins)
+        .add_plugins(
+            DefaultPlugins
+                .set(AssetPlugin {
+                    asset_folder: "../../assets".to_string(),
+                    ..default()
+                })
+                .set(LogPlugin {
+                    level,
+                    ..Default::default()
+                }),
+        )
         .add_plugin(ShapePlugin)
         .add_startup_system(setup_system)
         .add_startup_system(ui_setup)

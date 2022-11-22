@@ -5,7 +5,7 @@ pub mod theme;
 
 use crate::prelude::*;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Resource)]
 pub struct RenderState {
     pub theme: Theme,
 }
