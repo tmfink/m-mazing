@@ -184,7 +184,7 @@ pub(super) fn tile_from_str(s: &str) -> Result<Tile, TileParsingError> {
 }
 
 fn skip_tile_line(line: &[u8]) -> bool {
-    matches!(line.get(0), None | Some(b'#'))
+    matches!(line.first(), None | Some(b'#'))
 }
 
 /// Creates a `Tile` from an iterator that produces (line_number, line).

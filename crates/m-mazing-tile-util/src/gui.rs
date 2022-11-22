@@ -144,7 +144,7 @@ pub fn spawn_tile(
         tile.rotate(SpinDirection::CounterClockwise);
     }
 
-    let id = tile.spawn(Vec2::ZERO, &*render, &mut commands);
+    let id = tile.spawn(Vec2::ZERO, &render, &mut commands);
 
     let new_tile = CurrentTile { id, tile };
     commands.insert_resource(new_tile);
