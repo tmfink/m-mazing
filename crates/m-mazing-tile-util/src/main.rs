@@ -6,6 +6,7 @@ use clap::Parser;
 use m_mazing_core::bevy;
 use m_mazing_core::bevy::log::LogPlugin;
 use m_mazing_core::prelude::*;
+use m_mazing_core::render::RenderState;
 use notify::Watcher;
 
 use bevy::ecs as bevy_ecs; // needed for Component derive
@@ -122,13 +123,12 @@ impl Ctx {
 fn setup_system(mut commands: Commands) {
     const CAMERA_EXTENT: f32 = 3.0;
     let mut camera_bundle = Camera2dBundle::default();
-    camera_bundle.projection.left = -CAMERA_EXTENT;
-    camera_bundle.projection.right = CAMERA_EXTENT;
-    camera_bundle.projection.top = CAMERA_EXTENT;
-    camera_bundle.projection.bottom = -CAMERA_EXTENT;
 
     // able to re-size window if pop out **after** moving window
-    camera_bundle.projection.scaling_mode = ScalingMode::FixedVertical(CAMERA_EXTENT);
+    camera_bundle.projection.scaling_mode = ScalingMode::Auto {
+        min_width: CAMERA_EXTENT,
+        min_height: CAMERA_EXTENT,
+    };
 
     // hack to modify camera
     camera_bundle.transform.scale = Vec3::new(3.0, 3.0, 1.0);

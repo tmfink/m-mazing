@@ -1,4 +1,6 @@
-use crate::{prelude::*, render::polar_to_cartesian};
+use crate::{prelude::*, render::draw_connected_line, render::polar_to_cartesian};
+
+use super::RenderState;
 
 const GRID_WIDTH: f32 = Tile::CELL_GRID_WIDTH as f32;
 const GRID_HALF_WIDTH: f32 = 0.5 * GRID_WIDTH;
@@ -54,7 +56,7 @@ fn render_timer(
         },
     ];
 
-    let builder = shape::draw_connected_line(TILE_POINTS.iter().copied(), GeometryBuilder::new());
+    let builder = draw_connected_line(TILE_POINTS.iter().copied(), GeometryBuilder::new());
     let transform = Transform::from_translation(location.extend(CELL_ITEM_Z));
     let geo = commands
         .spawn(builder.build(
@@ -121,7 +123,7 @@ fn render_warp(
         .zip(radii)
         .map(|(angle, radius)| polar_to_cartesian(radius, angle) + center);
 
-    let builder = shape::draw_connected_line(points, GeometryBuilder::new());
+    let builder = draw_connected_line(points, GeometryBuilder::new());
     let transform = Transform::from_translation(location.extend(CELL_ITEM_Z));
     let geo = commands
         .spawn(builder.build(
@@ -180,8 +182,8 @@ fn render_camera(
     ];
 
     let mut builder = GeometryBuilder::new();
-    builder = shape::draw_connected_line(points.iter().copied(), builder);
-    builder = shape::draw_connected_line(
+    builder = draw_connected_line(points.iter().copied(), builder);
+    builder = draw_connected_line(
         points.iter().copied().map(|mut v| {
             v.y *= -1.0;
             v

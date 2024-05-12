@@ -5,7 +5,7 @@ pub mod tile;
 
 pub mod prelude {
     pub use crate::action::*;
-    pub use crate::render::{camera::*, shape::*, theme::*, *};
+    pub use crate::render::{shape::*, theme::*};
     pub use crate::role::*;
     pub use crate::scenario::*;
     pub use crate::tile::{
@@ -13,7 +13,6 @@ pub mod prelude {
     };
     pub use crate::*;
     pub use bevy_prototype_lyon::prelude::*;
-    pub use log::*;
 }
 
 pub use bevy;
@@ -22,7 +21,7 @@ pub use bevy_prototype_lyon;
 pub mod render;
 use bevy::prelude::*;
 
-pub struct PlayerId(u32);
+//pub struct PlayerId(u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Pawn {
@@ -58,7 +57,7 @@ pub(crate) fn init_logging() {
 
     static LOGGING: Once = Once::new();
     LOGGING.call_once(|| {
-        env_logger::init();
+        //env_logger::init();
     });
 }
 

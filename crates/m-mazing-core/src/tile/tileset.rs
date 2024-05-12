@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use log::{debug, info, trace};
+use bevy::log::{debug, info, trace};
 use thiserror::Error;
 
 use super::*;
