@@ -26,7 +26,7 @@ fn main() -> Result<()> {
     let level = log_level(args.verbose, args.quiet);
 
     App::new()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
         .add_plugins(DefaultPlugins.set(LogPlugin {
             level,
             ..Default::default()

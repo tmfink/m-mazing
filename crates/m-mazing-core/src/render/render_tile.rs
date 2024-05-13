@@ -59,12 +59,13 @@ fn render_timer(
     let builder = draw_connected_line(TILE_POINTS.iter().copied(), GeometryBuilder::new());
     let transform = Transform::from_translation(location.extend(CELL_ITEM_Z));
     let geo = commands
-        .spawn(builder.build(
-            DrawMode::Stroke(StrokeMode::new(
-                render.theme.timer_color,
-                render.theme.wall_thickness,
-            )),
-            transform,
+        .spawn((
+            ShapeBundle {
+                path: builder.build(),
+                transform,
+                ..default()
+            },
+            Stroke::new(render.theme.timer_color, render.theme.wall_thickness),
         ))
         .id();
     commands.entity(tile_entity).push_children(&[geo]);
@@ -92,12 +93,16 @@ fn render_used_marker(
         ));
     let transform = Transform::from_translation(location.extend(CELL_MARKER_Z));
     let geo = commands
-        .spawn(builder.build(
-            DrawMode::Stroke(StrokeMode::new(
+        .spawn((
+            ShapeBundle {
+                path: builder.build(),
+                transform,
+                ..default()
+            },
+            Stroke::new(
                 render.theme.used_marker_color,
                 render.theme.used_marker_thickness,
-            )),
-            transform,
+            ),
         ))
         .id();
     commands.entity(tile_entity).push_children(&[geo]);
@@ -126,12 +131,13 @@ fn render_warp(
     let builder = draw_connected_line(points, GeometryBuilder::new());
     let transform = Transform::from_translation(location.extend(CELL_ITEM_Z));
     let geo = commands
-        .spawn(builder.build(
-            DrawMode::Stroke(StrokeMode::new(
-                pawn.as_color(render),
-                render.theme.warp_thickness,
-            )),
-            transform,
+        .spawn((
+            ShapeBundle {
+                path: builder.build(),
+                transform,
+                ..default()
+            },
+            Stroke::new(pawn.as_color(render), render.theme.warp_thickness),
         ))
         .id();
     commands.entity(tile_entity).push_children(&[geo]);
@@ -152,13 +158,13 @@ fn render_loot(
     let translation = (location + Vec2::new(0.5, -0.5)).extend(CELL_ITEM_Z);
     let transform = Transform::from_rotation(rot).with_translation(translation);
     let entity = commands
-        .spawn(GeometryBuilder::build_as(
-            &shape,
-            DrawMode::Stroke(StrokeMode::new(
-                pawn.as_color(render),
-                render.theme.wall_thickness,
-            )),
-            transform,
+        .spawn((
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&shape),
+                transform,
+                ..default()
+            },
+            Stroke::new(pawn.as_color(render), render.theme.wall_thickness),
         ))
         .id();
     commands.entity(tile_entity).push_children(&[entity]);
@@ -197,12 +203,13 @@ fn render_camera(
     });
 
     let entity = commands
-        .spawn(builder.build(
-            DrawMode::Stroke(StrokeMode::new(
-                render.theme.camera_color,
-                render.theme.warp_thickness,
-            )),
-            transform,
+        .spawn((
+            ShapeBundle {
+                path: builder.build(),
+                transform,
+                ..default()
+            },
+            Stroke::new(render.theme.camera_color, render.theme.warp_thickness),
         ))
         .id();
     commands.entity(tile_entity).push_children(&[entity]);
@@ -216,10 +223,8 @@ fn render_crystal_ball(
 ) {
     let translation = (location + Vec2::new(0.5, -0.5)).extend(CELL_ITEM_Z);
     let transform = Transform::from_translation(translation);
-    let draw_mode = DrawMode::Outlined {
-        fill_mode: FillMode::color(Color::WHITE),
-        outline_mode: StrokeMode::new(render.theme.crystal_ball_color, 0.05),
-    };
+    let stroke = Stroke::new(render.theme.crystal_ball_color, 0.05);
+    let fill = Fill::color(Color::WHITE);
 
     let hexagon = shapes::RegularPolygon {
         sides: 6,
@@ -227,7 +232,15 @@ fn render_crystal_ball(
         feature: shapes::RegularPolygonFeature::Radius(0.4),
     };
     let hexagon = commands
-        .spawn(GeometryBuilder::build_as(&hexagon, draw_mode, transform))
+        .spawn((
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&hexagon),
+                transform,
+                ..default()
+            },
+            fill,
+            stroke,
+        ))
         .id();
     commands.entity(tile_entity).push_children(&[hexagon]);
 
@@ -236,10 +249,14 @@ fn render_crystal_ball(
         radius: 0.3,
     };
     let circle = commands
-        .spawn(GeometryBuilder::build_as(
-            &circle,
-            draw_mode,
-            Transform::from_translation(Vec3::new(0.0, 0.0, 0.1)),
+        .spawn((
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&circle),
+                transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.1)),
+                ..default()
+            },
+            fill,
+            stroke,
         ))
         .id();
     commands.entity(hexagon).push_children(&[circle]);
@@ -255,16 +272,19 @@ fn render_escalator(
     let offset = CELL_HALF_WIDTH - GRID_HALF_WIDTH;
     let transform = Transform::from_xyz(offset, offset, ESCALATOR_Z);
     let entity = commands
-        .spawn(GeometryBuilder::build_as(
-            &shapes::Line(
-                Vec2::new(a.x() as f32, 3.0 - a.y() as f32),
-                Vec2::new(b.x() as f32, 3.0 - b.y() as f32),
-            ),
-            DrawMode::Stroke(StrokeMode::new(
+        .spawn((
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&shapes::Line(
+                    Vec2::new(a.x() as f32, 3.0 - a.y() as f32),
+                    Vec2::new(b.x() as f32, 3.0 - b.y() as f32),
+                )),
+                transform,
+                ..default()
+            },
+            Stroke::new(
                 render.theme.escalator_color,
                 render.theme.escalator_thickness,
-            )),
-            transform,
+            ),
         ))
         .id();
     commands.entity(tile_entity).push_children(&[entity]);
@@ -295,10 +315,13 @@ fn render_final_exit(
         origin: RectangleOrigin::Center,
     };
     let bg_square = commands
-        .spawn(GeometryBuilder::build_as(
-            &bg_square,
-            DrawMode::Fill(FillMode::color(pawn.as_color(render))),
-            transform,
+        .spawn((
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&bg_square),
+                transform,
+                ..default()
+            },
+            Fill::color(pawn.as_color(render)),
         ))
         .id();
     commands.entity(tile_entity).push_children(&[bg_square]);
@@ -320,12 +343,16 @@ fn render_final_exit(
             arrow_head + Vec2::new(-head_length, -head_halfwidth),
         ));
     let arrow = commands
-        .spawn(arrow_builder.build(
-            DrawMode::Stroke(StrokeMode::new(
+        .spawn((
+            ShapeBundle {
+                path: arrow_builder.build(),
+                transform,
+                ..default()
+            },
+            Stroke::new(
                 render.theme.final_exit_arrow_color,
                 render.theme.warp_thickness,
-            )),
-            transform,
+            ),
         ))
         .id();
     commands.entity(tile_entity).push_children(&[arrow]);
@@ -356,9 +383,13 @@ fn render_wall(
         color = wall.wall_color(render, tile_bg_color);
     }
     let geo = commands
-        .spawn(builder.build(
-            DrawMode::Stroke(StrokeMode::new(color, render.theme.wall_thickness)),
-            WALL_TRANSFORM,
+        .spawn((
+            ShapeBundle {
+                path: builder.build(),
+                transform: WALL_TRANSFORM,
+                ..default()
+            },
+            Stroke::new(color, render.theme.wall_thickness),
         ))
         .id();
     commands.entity(tile_entity).push_children(&[geo]);
@@ -382,10 +413,13 @@ impl Tile {
             origin: RectangleOrigin::Center,
         };
         let tile_entity = commands
-            .spawn(GeometryBuilder::build_as(
-                &shape,
-                DrawMode::Fill(FillMode::color(tile_bg_color)),
-                Transform::from_translation(pos.extend(0.0)),
+            .spawn((
+                ShapeBundle {
+                    path: GeometryBuilder::build_as(&shape),
+                    transform: Transform::from_translation(pos.extend(0.0)),
+                    ..default()
+                },
+                Fill::color(tile_bg_color),
             ))
             .insert(TileShape)
             .id();
@@ -452,10 +486,13 @@ impl Tile {
                         origin: RectangleOrigin::TopLeft,
                     };
                     let covered_cell_id = commands
-                        .spawn(GeometryBuilder::build_as(
-                            &covered_cell,
-                            DrawMode::Fill(FillMode::color(render.theme.unreachable_cell_color)),
-                            Transform::from_xyz(x, y, CELL_ITEM_Z),
+                        .spawn((
+                            ShapeBundle {
+                                path: GeometryBuilder::build_as(&covered_cell),
+                                transform: Transform::from_xyz(x, y, CELL_ITEM_Z),
+                                ..default()
+                            },
+                            Fill::color(render.theme.unreachable_cell_color),
                         ))
                         .id();
                     commands

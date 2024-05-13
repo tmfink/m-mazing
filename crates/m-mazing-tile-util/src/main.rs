@@ -125,7 +125,7 @@ fn setup_system(mut commands: Commands) {
     let mut camera_bundle = Camera2dBundle::default();
 
     // able to re-size window if pop out **after** moving window
-    camera_bundle.projection.scaling_mode = ScalingMode::Auto {
+    camera_bundle.projection.scaling_mode = ScalingMode::AutoMin {
         min_width: CAMERA_EXTENT,
         min_height: CAMERA_EXTENT,
     };
@@ -207,8 +207,8 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemLabel)]
-enum MySystemLabels {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
+enum MySystemSet {
     Input,
     SpawnTile,
 }
@@ -229,7 +229,7 @@ fn main() -> Result<()> {
     println!("tileset: {:#?}", ctx.tileset);
 
     App::new()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
         .insert_non_send_resource(ctx)
         .init_resource::<RenderState>()
         .init_resource::<TileAvailability>()
@@ -249,15 +249,15 @@ fn main() -> Result<()> {
         .add_plugin(ShapePlugin)
         .add_startup_system(setup_system)
         .add_startup_system(ui_setup)
-        .add_system(frame_init.before(MySystemLabels::Input))
-        .add_system(keyboard_input_system.label(MySystemLabels::Input))
-        .add_system(notify_tileset_change.label(MySystemLabels::Input))
+        .add_system(frame_init.before(MySystemSet::Input))
+        .add_system(keyboard_input_system.in_set(MySystemSet::Input))
+        .add_system(notify_tileset_change.in_set(MySystemSet::Input))
         .add_system(
             spawn_tile
-                .label(MySystemLabels::SpawnTile)
-                .after(MySystemLabels::Input),
+                .in_set(MySystemSet::SpawnTile)
+                .after(MySystemSet::Input),
         )
-        .add_system(print_tile.after(MySystemLabels::SpawnTile))
+        .add_system(print_tile.after(MySystemSet::SpawnTile))
         //.add_system(debug_system)
         .run();
 
