@@ -7,20 +7,21 @@ const GRID_HALF_WIDTH: f32 = 0.5 * GRID_WIDTH;
 const CELL_WIDTH: f32 = 1.0;
 const CELL_HALF_WIDTH: f32 = 0.5 * CELL_WIDTH;
 
-const WALL_Z: f32 = 0.1;
-const WALL_TRANSFORM: Transform = Transform {
-    translation: Vec3 {
-        x: 0.,
-        y: 0.,
-        z: WALL_Z,
-    },
-    ..Transform::IDENTITY
-};
+#[derive(Clone, Copy, Debug)]
+#[repr(u16)]
+enum RenderLayerZ {
+    CellBg,
+    CellItem,
+    CellMarker,
+    Escalator,
+}
 
-const CELL_BG_Z: f32 = 0.5 * (WALL_Z + CELL_ITEM_Z);
-const CELL_ITEM_Z: f32 = 0.2;
-const CELL_MARKER_Z: f32 = 0.3;
-const ESCALATOR_Z: f32 = 0.4;
+impl RenderLayerZ {
+    const HEIGHT: f32 = 100.0;
+    const fn z(self) -> f32 {
+        ((self as u16) * (Self::HEIGHT as u16)) as f32
+    }
+}
 
 fn render_timer(
     render: &RenderState,
@@ -57,7 +58,7 @@ fn render_timer(
     ];
 
     let builder = draw_connected_line(TILE_POINTS.iter().copied(), GeometryBuilder::new());
-    let transform = Transform::from_translation(location.extend(CELL_ITEM_Z));
+    let transform = Transform::from_translation(location.extend(RenderLayerZ::CellItem.z()));
     let geo = commands
         .spawn((
             ShapeBundle {
@@ -91,7 +92,7 @@ fn render_used_marker(
             Vec2::new(x_left, y_bottom),
             Vec2::new(x_right, y_top),
         ));
-    let transform = Transform::from_translation(location.extend(CELL_MARKER_Z));
+    let transform = Transform::from_translation(location.extend(RenderLayerZ::CellMarker.z()));
     let geo = commands
         .spawn((
             ShapeBundle {
@@ -129,7 +130,7 @@ fn render_warp(
         .map(|(angle, radius)| polar_to_cartesian(radius, angle) + center);
 
     let builder = draw_connected_line(points, GeometryBuilder::new());
-    let transform = Transform::from_translation(location.extend(CELL_ITEM_Z));
+    let transform = Transform::from_translation(location.extend(RenderLayerZ::CellItem.z()));
     let geo = commands
         .spawn((
             ShapeBundle {
@@ -155,7 +156,7 @@ fn render_loot(
         origin: RectangleOrigin::Center,
     };
     let rot = Quat::from_rotation_z(std::f32::consts::FRAC_PI_4);
-    let translation = (location + Vec2::new(0.5, -0.5)).extend(CELL_ITEM_Z);
+    let translation = (location + Vec2::new(0.5, -0.5)).extend(RenderLayerZ::CellItem.z());
     let transform = Transform::from_rotation(rot).with_translation(translation);
     let entity = commands
         .spawn((
@@ -176,7 +177,7 @@ fn render_camera(
     commands: &mut Commands,
     tile_entity: Entity,
 ) {
-    let translation = (location + Vec2::new(0.5, -0.5)).extend(CELL_ITEM_Z);
+    let translation = (location + Vec2::new(0.5, -0.5)).extend(RenderLayerZ::CellItem.z());
     let transform = Transform::from_translation(translation);
 
     let points = [
@@ -221,7 +222,7 @@ fn render_crystal_ball(
     commands: &mut Commands,
     tile_entity: Entity,
 ) {
-    let translation = (location + Vec2::new(0.5, -0.5)).extend(CELL_ITEM_Z);
+    let translation = (location + Vec2::new(0.5, -0.5)).extend(RenderLayerZ::CellItem.z());
     let transform = Transform::from_translation(translation);
     let stroke = Stroke::new(render.theme.crystal_ball_color, 0.05);
     let fill = Fill::color(Color::WHITE);
@@ -270,7 +271,7 @@ fn render_escalator(
 ) {
     let [a, b] = escalator.0;
     let offset = CELL_HALF_WIDTH - GRID_HALF_WIDTH;
-    let transform = Transform::from_xyz(offset, offset, ESCALATOR_Z);
+    let transform = Transform::from_xyz(offset, offset, RenderLayerZ::Escalator.z());
     let entity = commands
         .spawn((
             ShapeBundle {
@@ -306,8 +307,8 @@ fn render_final_exit(
 
     let angle = tile.cell_exit_direction(point).as_angle();
     let rotation = Quat::from_rotation_z(angle);
-    let translation = (location + Vec2::new(0.5, -0.5)).extend(CELL_BG_Z);
-    let transform = Transform::from_rotation(rotation).with_translation(translation);
+    let translation = (location + Vec2::new(0.5, -0.5)).extend(TileChildZ::ExitBg.z());
+    let mut transform = Transform::from_rotation(rotation).with_translation(translation);
 
     let width = 1.0 - render.theme.wall_thickness;
     let bg_square = shapes::Rectangle {
@@ -331,6 +332,7 @@ fn render_final_exit(
     let head_width = 0.3;
     let head_halfwidth = 0.5 * head_width;
     let head_length = 0.25;
+    transform.translation.z = TileChildZ::ExitArrow.z();
 
     let arrow_builder = GeometryBuilder::new()
         .add(&shapes::Line(arrow_tail, arrow_head))
@@ -358,10 +360,12 @@ fn render_final_exit(
     commands.entity(tile_entity).push_children(&[arrow]);
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_wall(
     render: &RenderState,
     a: Vec2,
     b: Vec2,
+    height: f32,
     wall: WallState,
     tile_bg_color: Color,
     commands: &mut Commands,
@@ -382,11 +386,21 @@ fn render_wall(
         builder = builder.add(&line);
         color = wall.wall_color(render, tile_bg_color);
     }
+
+    let transform = Transform {
+        translation: Vec3 {
+            x: 0.,
+            y: 0.,
+            z: height,
+        },
+        ..Transform::IDENTITY
+    };
+
     let geo = commands
         .spawn((
             ShapeBundle {
                 path: builder.build(),
-                transform: WALL_TRANSFORM,
+                transform,
                 ..default()
             },
             Stroke::new(color, render.theme.wall_thickness),
@@ -397,6 +411,20 @@ fn render_wall(
 
 #[derive(Component)]
 struct TileShape;
+
+#[derive(Clone, Copy, Debug, Hash)]
+enum TileChildZ {
+    ExitBg,
+    ExitArrow,
+    WallOpen,
+    WallNonOpen,
+}
+
+impl TileChildZ {
+    fn z(self) -> f32 {
+        ((self as u16 + 1) as f32) * 0.01
+    }
+}
 
 impl Tile {
     pub fn spawn(&self, pos: Vec2, render: &RenderState, commands: &mut Commands) -> Entity {
@@ -416,7 +444,7 @@ impl Tile {
             .spawn((
                 ShapeBundle {
                     path: GeometryBuilder::build_as(&shape),
-                    transform: Transform::from_translation(pos.extend(0.0)),
+                    transform: Transform::from_translation(pos.extend(RenderLayerZ::CellBg.z())),
                     ..default()
                 },
                 Fill::color(tile_bg_color),
@@ -424,7 +452,7 @@ impl Tile {
             .insert(TileShape)
             .id();
 
-        let render_walls = |pred: fn(WallState) -> bool, commands: &mut Commands| {
+        let render_walls = |pred: fn(WallState) -> bool, height: f32, commands: &mut Commands| {
             // horizontal walls
             for (row_idx, row) in self.horz_walls().iter().enumerate() {
                 let row_idx = row_idx as f32;
@@ -437,6 +465,7 @@ impl Tile {
                             render,
                             Vec2::new(x, y),
                             Vec2::new(x + CELL_WIDTH, y),
+                            height,
                             wall,
                             tile_bg_color,
                             commands,
@@ -458,6 +487,7 @@ impl Tile {
                             render,
                             Vec2::new(x, y),
                             Vec2::new(x, y - CELL_WIDTH),
+                            height,
                             wall,
                             tile_bg_color,
                             commands,
@@ -469,8 +499,16 @@ impl Tile {
         };
 
         // Render open walls before other walls
-        render_walls(|wall| wall == WallState::Open, commands);
-        render_walls(|wall| wall != WallState::Open, commands);
+        render_walls(
+            |wall| wall == WallState::Open,
+            TileChildZ::WallOpen.z(),
+            commands,
+        );
+        render_walls(
+            |wall| wall != WallState::Open,
+            TileChildZ::WallNonOpen.z(),
+            commands,
+        );
 
         for (row_idx, row) in self.cell_grid().iter().enumerate() {
             let row_idx_float = row_idx as f32;
@@ -489,7 +527,7 @@ impl Tile {
                         .spawn((
                             ShapeBundle {
                                 path: GeometryBuilder::build_as(&covered_cell),
-                                transform: Transform::from_xyz(x, y, CELL_ITEM_Z),
+                                transform: Transform::from_xyz(x, y, RenderLayerZ::CellItem.z()),
                                 ..default()
                             },
                             Fill::color(render.theme.unreachable_cell_color),
