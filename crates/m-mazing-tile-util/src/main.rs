@@ -13,8 +13,9 @@ use bevy::ecs as bevy_ecs; // needed for Component derive
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
 
+mod debug;
 mod gui;
-use crate::gui::*;
+use crate::{debug::*, gui::*};
 
 const LEGEND: &str = "
 Arrow keys - cycle;
@@ -251,6 +252,7 @@ fn main() -> Result<()> {
         .add_startup_system(ui_setup)
         .add_system(frame_init.before(MySystemSet::Input))
         .add_system(keyboard_input_system.in_set(MySystemSet::Input))
+        .add_system(debug_entity.in_set(MySystemSet::Input))
         .add_system(notify_tileset_change.in_set(MySystemSet::Input))
         .add_system(
             spawn_tile
