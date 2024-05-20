@@ -63,7 +63,7 @@ fn render_timer(
         .spawn((
             ShapeBundle {
                 path: builder.build(),
-                transform,
+                spatial: SpatialBundle::from_transform(transform),
                 ..default()
             },
             Stroke::new(render.theme.timer_color, render.theme.wall_thickness),
@@ -97,7 +97,7 @@ fn render_used_marker(
         .spawn((
             ShapeBundle {
                 path: builder.build(),
-                transform,
+                spatial: SpatialBundle::from_transform(transform),
                 ..default()
             },
             Stroke::new(
@@ -135,7 +135,7 @@ fn render_warp(
         .spawn((
             ShapeBundle {
                 path: builder.build(),
-                transform,
+                spatial: SpatialBundle::from_transform(transform),
                 ..default()
             },
             Stroke::new(pawn.as_color(render), render.theme.warp_thickness),
@@ -162,7 +162,7 @@ fn render_loot(
         .spawn((
             ShapeBundle {
                 path: GeometryBuilder::build_as(&shape),
-                transform,
+                spatial: SpatialBundle::from_transform(transform),
                 ..default()
             },
             Stroke::new(pawn.as_color(render), render.theme.wall_thickness),
@@ -207,7 +207,7 @@ fn render_camera(
         .spawn((
             ShapeBundle {
                 path: builder.build(),
-                transform,
+                spatial: SpatialBundle::from_transform(transform),
                 ..default()
             },
             Stroke::new(render.theme.camera_color, render.theme.warp_thickness),
@@ -236,7 +236,7 @@ fn render_crystal_ball(
         .spawn((
             ShapeBundle {
                 path: GeometryBuilder::build_as(&hexagon),
-                transform,
+                spatial: SpatialBundle::from_transform(transform),
                 ..default()
             },
             fill,
@@ -253,7 +253,9 @@ fn render_crystal_ball(
         .spawn((
             ShapeBundle {
                 path: GeometryBuilder::build_as(&circle),
-                transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.1)),
+                spatial: SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
+                    0.0, 0.0, 0.1,
+                ))),
                 ..default()
             },
             fill,
@@ -279,7 +281,7 @@ fn render_escalator(
                     Vec2::new(a.x() as f32, 3.0 - a.y() as f32),
                     Vec2::new(b.x() as f32, 3.0 - b.y() as f32),
                 )),
-                transform,
+                spatial: SpatialBundle::from_transform(transform),
                 ..default()
             },
             Stroke::new(
@@ -319,7 +321,7 @@ fn render_final_exit(
         .spawn((
             ShapeBundle {
                 path: GeometryBuilder::build_as(&bg_square),
-                transform,
+                spatial: SpatialBundle::from_transform(transform),
                 ..default()
             },
             Fill::color(pawn.as_color(render)),
@@ -348,7 +350,7 @@ fn render_final_exit(
         .spawn((
             ShapeBundle {
                 path: arrow_builder.build(),
-                transform,
+                spatial: SpatialBundle::from_transform(transform),
                 ..default()
             },
             Stroke::new(
@@ -400,7 +402,7 @@ fn render_wall(
         .spawn((
             ShapeBundle {
                 path: builder.build(),
-                transform,
+                spatial: SpatialBundle::from_transform(transform),
                 ..default()
             },
             Stroke::new(color, render.theme.wall_thickness),
@@ -444,7 +446,9 @@ impl Tile {
             .spawn((
                 ShapeBundle {
                     path: GeometryBuilder::build_as(&shape),
-                    transform: Transform::from_translation(pos.extend(RenderLayerZ::CellBg.z())),
+                    spatial: SpatialBundle::from_transform(Transform::from_translation(
+                        pos.extend(RenderLayerZ::CellBg.z()),
+                    )),
                     ..default()
                 },
                 Fill::color(tile_bg_color),
@@ -527,7 +531,11 @@ impl Tile {
                         .spawn((
                             ShapeBundle {
                                 path: GeometryBuilder::build_as(&covered_cell),
-                                transform: Transform::from_xyz(x, y, RenderLayerZ::CellItem.z()),
+                                spatial: SpatialBundle::from_transform(Transform::from_xyz(
+                                    x,
+                                    y,
+                                    RenderLayerZ::CellItem.z(),
+                                )),
                                 ..default()
                             },
                             Fill::color(render.theme.unreachable_cell_color),

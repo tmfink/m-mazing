@@ -239,7 +239,7 @@ fn main() -> Result<()> {
         .add_plugins(
             DefaultPlugins
                 .set(AssetPlugin {
-                    asset_folder: "../../assets".to_string(),
+                    file_path: "../../assets".to_string(),
                     ..default()
                 })
                 .set(LogPlugin {
