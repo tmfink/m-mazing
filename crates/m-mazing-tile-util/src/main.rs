@@ -143,7 +143,8 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 justify_content: JustifyContent::SpaceBetween,
                 ..Default::default()
             },
@@ -154,7 +155,8 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(100.0),
                         position_type: PositionType::Absolute,
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::FlexEnd,
@@ -168,7 +170,8 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     parent
                         .spawn(TextBundle {
                             style: Style {
-                                size: Size::new(Val::Auto, Val::Auto),
+                                width: Val::Auto,
+                                height: Val::Auto,
                                 ..Default::default()
                             },
                             text: Text::from_section(
@@ -189,11 +192,8 @@ fn ui_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         style: Style {
             align_self: AlignSelf::FlexEnd,
             position_type: PositionType::Absolute,
-            position: UiRect {
-                top: Val::Px(5.0),
-                left: Val::Px(15.0),
-                ..Default::default()
-            },
+            top: Val::Px(5.0),
+            left: Val::Px(15.0),
             ..Default::default()
         },
         text: Text::from_section(
@@ -247,20 +247,21 @@ fn main() -> Result<()> {
                     ..Default::default()
                 }),
         )
-        .add_plugin(ShapePlugin)
-        .add_startup_system(setup_system)
-        .add_startup_system(ui_setup)
-        .add_system(frame_init.before(MySystemSet::Input))
-        .add_system(keyboard_input_system.in_set(MySystemSet::Input))
-        .add_system(debug_entity.in_set(MySystemSet::Input))
-        .add_system(notify_tileset_change.in_set(MySystemSet::Input))
-        .add_system(
+        .add_plugins(ShapePlugin)
+        .add_systems(Startup, setup_system)
+        .add_systems(Startup, ui_setup)
+        .add_systems(Update, frame_init.before(MySystemSet::Input))
+        .add_systems(Update, keyboard_input_system.in_set(MySystemSet::Input))
+        .add_systems(Update, debug_entity.in_set(MySystemSet::Input))
+        .add_systems(Update, notify_tileset_change.in_set(MySystemSet::Input))
+        .add_systems(
+            Update,
             spawn_tile
                 .in_set(MySystemSet::SpawnTile)
                 .after(MySystemSet::Input),
         )
-        .add_system(print_tile.after(MySystemSet::SpawnTile))
-        //.add_system(debug_system)
+        .add_systems(Update, print_tile.after(MySystemSet::SpawnTile))
+        //.add_system(Update, debug_system)
         .run();
 
     Ok(())

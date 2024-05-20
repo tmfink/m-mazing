@@ -31,7 +31,7 @@ fn main() -> Result<()> {
             level,
             ..Default::default()
         }))
-        .add_plugin(ShapePlugin)
+        .add_plugins(ShapePlugin)
         .run();
 
     Ok(())

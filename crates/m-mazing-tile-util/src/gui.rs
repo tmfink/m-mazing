@@ -57,10 +57,10 @@ pub fn keyboard_input_system(
     }
 
     const NUM_SPIN_DIRS: u8 = 4;
-    if keyboard_input.any_just_pressed([KeyCode::LBracket]) {
+    if keyboard_input.any_just_pressed([KeyCode::BracketLeft]) {
         tile_rotation.left_turns = (tile_rotation.left_turns + 1).rem_euclid(NUM_SPIN_DIRS);
     }
-    if keyboard_input.any_just_pressed([KeyCode::RBracket]) {
+    if keyboard_input.any_just_pressed([KeyCode::BracketRight]) {
         tile_rotation.left_turns =
             (tile_rotation.left_turns as i8 - 1).rem_euclid(NUM_SPIN_DIRS as i8) as u8;
     }
