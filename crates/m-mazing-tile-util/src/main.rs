@@ -5,6 +5,7 @@ use clap::Parser;
 
 use m_mazing_core::bevy;
 use m_mazing_core::bevy::log::LogPlugin;
+use m_mazing_core::bevy_prototype_lyon::plugin::ShapePlugin;
 use m_mazing_core::prelude::*;
 use m_mazing_core::render::RenderState;
 use notify::Watcher;

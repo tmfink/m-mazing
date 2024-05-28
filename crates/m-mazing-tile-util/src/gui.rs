@@ -6,18 +6,18 @@ use m_mazing_core::render::RenderState;
 use crate::*;
 
 pub fn keyboard_input_system(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut app_exit_events: EventWriter<AppExit>,
     mut should_refresh: ResMut<RefreshTile>,
     mut ctx: NonSendMut<Ctx>,
     mut availability: ResMut<TileAvailability>,
     mut tile_rotation: ResMut<TileRotation>,
 ) {
-    if keyboard_input.any_pressed([KeyCode::Escape, KeyCode::Q]) {
+    if keyboard_input.any_pressed([KeyCode::Escape, KeyCode::KeyQ]) {
         app_exit_events.send(AppExit);
     }
 
-    if keyboard_input.just_pressed(KeyCode::R) {
+    if keyboard_input.just_pressed(KeyCode::KeyR) {
         should_refresh.0 = true;
         match ctx.refresh() {
             Ok(()) => info!("Manually reloading"),
@@ -25,10 +25,10 @@ pub fn keyboard_input_system(
         }
     }
 
-    if keyboard_input.any_just_pressed([KeyCode::Right, KeyCode::Down]) {
+    if keyboard_input.any_just_pressed([KeyCode::ArrowRight, KeyCode::ArrowDown]) {
         ctx.tile_idx += 1;
     }
-    if keyboard_input.any_just_pressed([KeyCode::Left, KeyCode::Up]) {
+    if keyboard_input.any_just_pressed([KeyCode::ArrowLeft, KeyCode::ArrowUp]) {
         ctx.tile_idx -= 1;
     }
 
@@ -48,7 +48,7 @@ pub fn keyboard_input_system(
         ctx.tile_idx = ctx.tileset.len() as isize - 1;
     }
 
-    if keyboard_input.any_just_pressed([KeyCode::K, KeyCode::U]) {
+    if keyboard_input.any_just_pressed([KeyCode::KeyK, KeyCode::KeyU]) {
         availability.0 = match availability.0 {
             CellItemAvailability::Available => CellItemAvailability::Used,
             CellItemAvailability::Used => CellItemAvailability::Available,
@@ -151,8 +151,8 @@ pub fn spawn_tile(
     commands.insert_resource(new_tile);
 }
 
-pub fn print_tile(keyboard_input: Res<Input<KeyCode>>, tile: Option<Res<CurrentTile>>) {
-    if keyboard_input.just_pressed(KeyCode::P) {
+pub fn print_tile(keyboard_input: Res<ButtonInput<KeyCode>>, tile: Option<Res<CurrentTile>>) {
+    if keyboard_input.just_pressed(KeyCode::KeyP) {
         match tile {
             None => println!("No tile"),
             Some(tile) => println!("{:#?}", tile.tile),

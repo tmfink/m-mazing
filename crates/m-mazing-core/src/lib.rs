@@ -12,7 +12,6 @@ pub mod prelude {
         cell::*, direction::*, escalator::*, grid_coord::*, tileset::*, wall::*, *,
     };
     pub use crate::*;
-    pub use bevy_prototype_lyon::prelude::*;
 }
 
 pub use bevy;

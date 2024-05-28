@@ -6,7 +6,7 @@ use m_mazing_core::bevy::{
         system::{Query, Res},
     },
     hierarchy::Parent,
-    input::{keyboard::KeyCode, Input},
+    input::{keyboard::KeyCode, ButtonInput},
 };
 
 use crate::*;
@@ -53,7 +53,7 @@ fn print_entity(
 }
 
 pub fn debug_entity(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     root_entities: Query<Entity, Without<Parent>>,
     entities_with_parent: Query<(Entity, &Parent)>,
     all_entities: &Entities,

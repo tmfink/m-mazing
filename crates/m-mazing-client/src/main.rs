@@ -4,8 +4,8 @@ use clap::Parser;
 
 use m_mazing_core::{
     bevy::{self, log::LogPlugin},
+    bevy_prototype_lyon::plugin::ShapePlugin,
     log_level,
-    prelude::*,
 };
 
 /// Utility to debug Tiles

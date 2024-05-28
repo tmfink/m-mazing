@@ -1,3 +1,10 @@
+use bevy_prototype_lyon::{
+    draw::{Fill, Stroke},
+    entity::ShapeBundle,
+    geometry::GeometryBuilder,
+    shapes::{self, RectangleOrigin},
+};
+
 use crate::{prelude::*, render::draw_connected_line, render::polar_to_cartesian};
 
 use super::RenderState;
