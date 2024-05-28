@@ -60,7 +60,7 @@ pub(crate) fn init_logging() {
     });
 }
 
-pub fn log_level(verbose: i32, quiet: i32) -> Level {
+pub fn log_level(verbose: u8, quiet: u8) -> Level {
     let levels = &[
         Level::ERROR,
         Level::WARN,
@@ -68,7 +68,7 @@ pub fn log_level(verbose: i32, quiet: i32) -> Level {
         Level::DEBUG,
         Level::TRACE,
     ];
-    let level_count = 2 + verbose - quiet;
+    let level_count = 2 + (verbose as i32) - (quiet as i32);
 
     let idx = level_count.clamp(0, (levels.len() - 1) as i32);
     let level = levels[idx as usize];

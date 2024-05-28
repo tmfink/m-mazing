@@ -13,3 +13,4 @@ categories = ["games"]
 [workspace.dependencies]
 bevy = { version = "0.13.0", features = ["dynamic_linking"] }
 bevy_prototype_lyon = "0.11.0"
+clap = { version = "4.5.4", features = ["derive"] }

@@ -32,12 +32,12 @@ Home/End - start/end;
 #[clap(about, version, author)]
 pub struct Args {
     /// Log verbosity
-    #[clap(long, short, parse(from_occurrences))]
-    verbose: i32,
+    #[clap(long, short, action = clap::ArgAction::Count)]
+    verbose: u8,
 
     /// Quiet log
-    #[clap(long, short, parse(from_occurrences), conflicts_with = "verbose")]
-    quiet: i32,
+    #[clap(long, short, action = clap::ArgAction::Count, conflicts_with = "verbose")]
+    quiet: u8,
 
     /// File with tile data
     #[clap(long, short)]
